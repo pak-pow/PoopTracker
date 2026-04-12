@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../home/home_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -10,30 +11,53 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
+  final TextEditingController _nameController = TextEditingController();
   int _currentPage = 0;
 
-  // The 3 screens we planned
+  // The 3 screens you designed, updated slightly for the final page
   final List<Map<String, String>> _onboardingData = [
     {
-      "title": "Hi Hazel! ✨",
+      "title": "Hello, Welcome!✨",
       "subtitle": "A cozy, private space just for you.",
-      "icon": "favorite", // We'll use standard icons for now
+      "icon": "favorite",
     },
     {
       "title": "Track with Ease",
-      "subtitle": "Log your daily rhythm comfortably and quickly.",
+      "subtitle": "Log your daily poop comfortably and quickly.",
       "icon": "edit_note",
     },
     {
       "title": "Completely Yours",
-      "subtitle": "Everything stays on your phone. Safe, secure, and offline.",
+      "subtitle": "Everything stays on your phone. What should we call you?",
       "icon": "lock_outline",
     },
   ];
 
+  Future<void> _completeOnboarding() async {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please enter a nickname!")));
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+
+    // Save the data permanently to the phone
+    await prefs.setBool('isFirstLaunch', false);
+    await prefs.setString('nickname', _nameController.text.trim());
+
+    if (!mounted) return;
+
+    // Blast off to the Home Screen!
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Hardcoding the cozy colors here temporarily until we link app_theme.dart
     const Color bgCream = Color(0xFFFDFCF5);
     const Color textBrown = Color(0xFF3A3A3A);
     const Color accentGreen = Color(0xFFA3B18A);
@@ -58,6 +82,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   iconString: _onboardingData[index]["icon"]!,
                   textBrown: textBrown,
                   accentGreen: accentGreen,
+                  isLastPage: index == _onboardingData.length - 1,
                 ),
               ),
             ),
@@ -66,7 +91,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Dot Indicators
                   Row(
                     children: List.generate(
                       _onboardingData.length,
@@ -74,16 +98,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           _buildDot(index: index, activeColor: accentGreen),
                     ),
                   ),
-                  // Next / Get Started Button
                   ElevatedButton(
                     onPressed: () {
                       if (_currentPage == _onboardingData.length - 1) {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomeScreen(),
-                          ),
-                        );
+                        _completeOnboarding(); // Call the save function here!
                       } else {
                         _pageController.nextPage(
                           duration: const Duration(milliseconds: 300),
@@ -122,13 +140,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // Helper widget for the text and icon
   Widget _buildPageContent({
     required String title,
     required String subtitle,
     required String iconString,
     required Color textBrown,
     required Color accentGreen,
+    required bool isLastPage,
   }) {
     IconData iconData = Icons.favorite;
     if (iconString == "edit_note") iconData = Icons.edit_note;
@@ -160,12 +178,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               height: 1.5,
             ),
           ),
+          // Dynamically show the text field ONLY on the last page
+          if (isLastPage) ...[
+            const SizedBox(height: 32),
+            TextField(
+              controller: _nameController,
+              textAlign: TextAlign.center,
+              decoration: InputDecoration(
+                hintText: "Enter your nickname...",
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 
-  // Helper widget for the dots
   AnimatedContainer _buildDot({
     required int index,
     required Color activeColor,
