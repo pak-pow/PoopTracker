@@ -2,6 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter/material.dart';
+import 'package:flutter_timezone/flutter_timezone.dart'; // NEW IMPORT
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -12,10 +13,14 @@ class NotificationService {
       FlutterLocalNotificationsPlugin();
 
   Future<void> init() async {
-    // 1. Initialize time zones so the alarm knows what "8:00 PM" actually means locally
+    // 1. Initialize the timezone database
     tz.initializeTimeZones();
 
-    // 2. Setup Android settings (telling it to use your newly generated app icon)
+    // 2. NEW: Fetch the phone's actual local timezone and set it!
+    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
+    tz.setLocalLocation(tz.getLocation(timeZoneName));
+
+    // 3. Setup Android settings
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/launcher_icon');
 
@@ -23,24 +28,22 @@ class NotificationService {
         InitializationSettings(android: initializationSettingsAndroid);
 
     await flutterLocalNotificationsPlugin.initialize(initializationSettings);
-    
+
     final androidPlugin = flutterLocalNotificationsPlugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
     if (androidPlugin != null) {
       await androidPlugin.requestNotificationsPermission();
-      await androidPlugin
-          .requestExactAlarmsPermission(); // Also ask for exact alarm permission!
+      await androidPlugin.requestExactAlarmsPermission();
     }
   }
 
   // Schedule Daily Notification
   Future<void> scheduleDailyReminder(TimeOfDay time) async {
-    // Always cancel existing ones before scheduling a new one to prevent spam
     await cancelAllNotifications();
 
-    // Figure out the exact date and time for the NEXT occurrence of this time
+    // Because we set the Local Location above, 'tz.local' now accurately reflects your phone's clock!
     final now = tz.TZDateTime.now(tz.local);
     var scheduledDate = tz.TZDateTime(
       tz.local,
@@ -51,15 +54,14 @@ class NotificationService {
       time.minute,
     );
 
-    // If that time has already passed today, schedule it for tomorrow
     if (scheduledDate.isBefore(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
 
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-          'daily_journal_reminders', // Internal ID
-          'Daily Reminders', // Channel Name shown in Android Settings
+          'daily_journal_reminders',
+          'Daily Reminders',
           channelDescription: 'Reminds you to log your daily entry',
           importance: Importance.max,
           priority: Priority.high,
@@ -69,19 +71,16 @@ class NotificationService {
       android: androidPlatformChannelSpecifics,
     );
 
-    // Schedule the repeating alarm!
     await flutterLocalNotificationsPlugin.zonedSchedule(
       0,
-      'Time to check in! ✨', // The Notification Title
-      'Take a moment to log your rhythm for today.', // The Notification Body
+      'Time to check in! ✨',
+      'Take a moment to log your rhythm for today.',
       scheduledDate,
       platformChannelSpecifics,
-      androidScheduleMode: AndroidScheduleMode
-          .exactAllowWhileIdle, // Allows it to fire even if phone is sleeping
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents
-          .time, // This is the magic line that makes it repeat every day!
+      matchDateTimeComponents: DateTimeComponents.time,
     );
   }
 
