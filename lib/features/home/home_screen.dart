@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../journal/new_entry_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -61,21 +62,24 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: Colors.black.withOpacity(0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
-                        )
+                        ),
                       ],
                     ),
                     child: IconButton(
-                      icon: const Icon(Icons.settings_outlined, color: textBrown),
+                      icon: const Icon(
+                        Icons.settings_outlined,
+                        color: textBrown,
+                      ),
                       onPressed: () {
                         // TODO: Navigate to settings
                       },
                     ),
-                  )
+                  ),
                 ],
               ),
-              
+
               const Spacer(),
-              
+
               // --- WEEKLY RHYTHM CARD ---
               Container(
                 width: double.infinity,
@@ -113,7 +117,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             value: 5 / 7, // Hardcoded 5 out of 7 days for now
                             strokeWidth: 12,
                             backgroundColor: bgCream,
-                            valueColor: const AlwaysStoppedAnimation<Color>(accentPeach),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              accentPeach,
+                            ),
                             strokeCap: StrokeCap.round,
                           ),
                           const Column(
@@ -145,7 +151,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(height: 32),
                     // Streak Badge
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       decoration: BoxDecoration(
                         color: bgCream,
                         borderRadius: BorderRadius.circular(20),
@@ -171,7 +180,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 64,
                 child: ElevatedButton.icon(
                   onPressed: () {
-                    // TODO: Navigate to new entry form
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const NewEntryScreen(),
+                      ),
+                    );
                   },
                   icon: const Icon(Icons.add, size: 28),
                   label: const Text(
@@ -194,7 +208,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-      
+
       // --- BOTTOM NAVIGATION ---
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -220,8 +234,14 @@ class _HomeScreenState extends State<HomeScreen> {
             unselectedItemColor: accentGreen.withOpacity(0.5),
             showSelectedLabels: true,
             showUnselectedLabels: true,
-            selectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            selectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
+            unselectedLabelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+            ),
             elevation: 0,
             items: const [
               BottomNavigationBarItem(
