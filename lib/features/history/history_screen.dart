@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart'; // Used to format the Month/Year text
 import '../home/home_screen.dart';
+import '../../data/models/journal_entry.dart';
+import '../../data/services/csv_service.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
@@ -15,11 +17,31 @@ class _HistoryScreenState extends State<HistoryScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
 
+  List<JournalEntry> _dayEntries = [];
+  bool _isLoading = false;
+
   // --- THEME COLORS ---
   final Color bgCream = const Color(0xFFFDFCF5);
   final Color textBrown = const Color(0xFF3A3A3A);
   final Color accentGreen = const Color(0xFFA3B18A);
   final Color accentPeach = const Color(0xFFE29578);
+
+  Future<void> _loadEntriesForDay(DateTime day) async {
+    setState(() {
+      _isLoading = true;
+    });
+    final entries = await CsvService().getEntriesForDay(day);
+    setState(() {
+      _dayEntries = entries;
+      _isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEntriesForDay(_focusedDay); // Load today's entries on startup
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +100,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         _selectedDay = selectedDay;
                         _focusedDay = focusedDay;
                       });
+                      _loadEntriesForDay(selectedDay);
                     },
                     // Styling the Header to match your Figma
                     headerStyle: HeaderStyle(
@@ -145,42 +168,84 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
             // --- RECENT ENTRIES LIST ---
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                children: [
-                  Text(
-                    "ENTRIES FOR ${DateFormat('MMM d, yyyy').format(_selectedDay ?? DateTime.now()).toUpperCase()}",
-                    style: TextStyle(
-                      color: accentGreen,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                      letterSpacing: 1.2,
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFFA3B18A),
+                      ),
+                    ) // accentGreen
+                  : _dayEntries.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.water_drop_outlined,
+                            size: 48,
+                            color: textBrown.withOpacity(0.2),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            "No entries yet",
+                            style: TextStyle(
+                              color: textBrown.withOpacity(0.5),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(24),
+                      itemCount:
+                          _dayEntries.length + 1, // +1 for the header text
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        if (index == 0) {
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 4.0),
+                            child: Text(
+                              "ENTRIES FOR ${DateFormat('MMM d, yyyy').format(_selectedDay ?? DateTime.now()).toUpperCase()}",
+                              style: TextStyle(
+                                color: accentGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                          );
+                        }
+
+                        // Get the real entry (adjusting index because of the header)
+                        final entry = _dayEntries[index - 1];
+
+                        // Determine icon based on the saved type
+                        IconData entryIcon = Icons.sentiment_satisfied_alt;
+                        Color entryColor = accentGreen;
+
+                        if (entry.type == "Hard & Dry") {
+                          entryIcon = Icons.sentiment_very_dissatisfied;
+                          entryColor = accentPeach;
+                        } else if (entry.type == "Loose & Watery") {
+                          entryIcon = Icons.water_drop_outlined;
+                          entryColor = accentPeach;
+                        }
+
+                        return _buildEntryCard(
+                          icon: entryIcon,
+                          title: entry.type,
+                          time: DateFormat('hh:mm a').format(entry.date),
+                          notes: entry.notes.isEmpty
+                              ? "No notes added."
+                              : entry.notes,
+                          calories: entry.calories.isEmpty
+                              ? "0 kcal"
+                              : "${entry.calories} kcal",
+                          iconColor: entryColor,
+                        );
+                      },
                     ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Dummy Entry Card 1
-                  _buildEntryCard(
-                    icon: Icons.sentiment_satisfied_alt,
-                    title: "Smooth",
-                    time: "08:30 AM",
-                    notes: "Feeling great today, hydrated well yesterday.",
-                    calories: "450 kcal",
-                    iconColor: accentGreen,
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Dummy Entry Card 2
-                  _buildEntryCard(
-                    icon: Icons.water_drop_outlined,
-                    title: "Loose",
-                    time: "Yesterday",
-                    notes: "Maybe too much coffee this morning.",
-                    calories: "320 kcal",
-                    iconColor: accentPeach,
-                  ),
-                ],
-              ),
             ),
           ],
         ),
