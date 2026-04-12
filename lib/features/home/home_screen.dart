@@ -4,6 +4,7 @@ import '../history/history_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../data/services/csv_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -37,9 +38,16 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  // --- BUG FIX: DYNAMIC GREETING ---
+  String get _greeting {
+    final h = DateTime.now().hour;
+    if (h < 12) return 'Good Morning';
+    if (h < 17) return 'Good Afternoon';
+    return 'Good Evening';
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Theme colors
     const Color bgCream = Color(0xFFFDFCF5);
     const Color textBrown = Color(0xFF3A3A3A);
     const Color accentGreen = Color(0xFFA3B18A);
@@ -61,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Good Morning, $_nickname! ✨",
+                        "$_greeting, $_nickname! ✨", // Uses dynamic time
                         style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -79,33 +87,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      icon: const Icon(
-                        Icons.settings_outlined,
-                        color: textBrown,
-                      ),
-                      onPressed: () {
-                        Navigator.pushReplacement(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (_, __, ___) => const SettingsScreen(),
-                            transitionDuration: Duration.zero,
-                          ),
-                        );
-                      },
-                    ),
+                  SvgPicture.asset(
+                    'assets/icon_navbar.svg',
+                    height: 48,
+                    width: 48,
                   ),
                 ],
               ),
@@ -181,25 +166,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-                    // Streak Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: bgCream,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        "🔥 $_weeklyRhythm-Day Streak! Keep it up.",
-                        style: const TextStyle(
-                          color: accentPeach,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
+                    // --- BUG FIX: NO MORE 0-DAY STREAK ---
+                    _weeklyRhythm > 0
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: bgCream,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              "🔥 $_weeklyRhythm-Day Streak! Keep it up.",
+                              style: const TextStyle(
+                                color: accentPeach,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          )
+                        : Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: bgCream,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: const Text(
+                              "Start logging to build your streak! 🌱",
+                              style: TextStyle(
+                                color: accentGreen,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ),
@@ -211,13 +215,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: double.infinity,
                 height: 64,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    // --- BUG FIX: AWAIT NEW ENTRY THEN RELOAD RHYTHM ---
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const NewEntryScreen(),
                       ),
                     );
+                    _loadRhythm();
                   },
                   icon: const Icon(Icons.add, size: 28),
                   label: const Text(
