@@ -246,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           child: BottomNavigationBar(
             backgroundColor: Colors.white,
-            currentIndex: _currentIndex,
+            currentIndex: 0,
             onTap: (index) {
               if (index == 1) {
                 Navigator.pushReplacement(
