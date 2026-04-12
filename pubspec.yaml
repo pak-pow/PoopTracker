@@ -40,10 +40,7 @@ dependencies:
   csv: ^6.0.0
   shared_preferences: ^2.2.2
 
-  # Cloud Sync (Google Drive)
-  google_sign_in: ^6.2.1
-  googleapis: ^13.1.0
-  http: ^1.2.0
+  share_plus: ^10.1.2
 
   # UI Elements
   table_calendar: ^3.1.2

@@ -7,14 +7,14 @@ class CsvService {
   static const String _fileName = 'health_logs.csv';
 
   // Helper function to get the exact file path on the device
-  Future<File> _getLocalFile() async {
+  Future<File> getLocalFile() async {
     final directory = await getApplicationDocumentsDirectory();
     return File('${directory.path}/$_fileName');
   }
 
   // Save a new entry to the CSV file
   Future<void> saveEntry(JournalEntry entry) async {
-    final file = await _getLocalFile();
+    final file = await getLocalFile();
     List<List<dynamic>> csvData = [];
 
     // If file exists, read existing data first
@@ -31,7 +31,7 @@ class CsvService {
 
   // Get all entries for a specific day
   Future<List<JournalEntry>> getEntriesForDay(DateTime targetDate) async {
-    final file = await _getLocalFile();
+    final file = await getLocalFile();
 
     if (!(await file.exists())) {
       return []; // Return empty if no logs exist yet
@@ -61,7 +61,7 @@ class CsvService {
 
   // Get the count of unique days with entries in the last 7 days
   Future<int> getWeeklyRhythmCount() async {
-    final file = await _getLocalFile();
+    final file = await getLocalFile();
     if (!(await file.exists())) return 0;
 
     final String fileContent = await file.readAsString();
@@ -93,7 +93,7 @@ class CsvService {
   }
 
   Future<void> deleteEntry(JournalEntry entryToDelete) async {
-    final file = await _getLocalFile();
+    final file = await getLocalFile();
     if (!(await file.exists())) return;
 
     final String fileContent = await file.readAsString();

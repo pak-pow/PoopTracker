@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
 import '../history/history_screen.dart';
-import '../../data/services/google_drive_service.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:poop_tracker/data/services/csv_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -243,87 +244,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           Divider(height: 1, color: bgCream, thickness: 2),
-          // Google Drive Sync
           ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
-            ),
             leading: Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: accentPeach.withOpacity(0.1),
-                shape: BoxShape.circle,
+                color: Colors.blueGrey.shade50,
+                borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(Icons.cloud_queue, color: accentPeach, size: 22),
+              child: Icon(Icons.ios_share, color: Colors.blueGrey.shade700),
             ),
-            title: Text(
-              "Google Drive Backup",
-              style: TextStyle(fontWeight: FontWeight.bold, color: textBrown),
+            title: const Text(
+              "Export Data",
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
             ),
-            subtitle: Text(
-              "App will automatically sync CSV when internet is detected.",
-              style: TextStyle(color: textBrown.withOpacity(0.6), fontSize: 12),
-            ),
-            trailing: Switch(
-              value: _driveSyncEnabled,
-              activeColor: accentPeach,
-              activeTrackColor: accentPeach.withOpacity(0.3),
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: bgCream,
-              onChanged: (val) async {
-                setState(() => _driveSyncEnabled = val);
+            subtitle: const Text("Share or save your CSV file locally"),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () async {
+              try {
+                // Get the local CSV file path from your existing service
+                final file = await CsvService().getLocalFile();
 
-                if (val == true) {
-                  // Show a loading snackbar
+                if (await file.exists()) {
+                  // Pop open the native Android share sheet!
+                  await Share.shareXFiles([
+                    XFile(file.path),
+                  ], text: 'My Hazel Journal Backup');
+                } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Row(
-                        children: [
-                          const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          const Text("Syncing to Google Drive..."),
-                        ],
-                      ),
-                      backgroundColor: textBrown,
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 2),
-                    ),
+                    const SnackBar(content: Text("No entries to export yet!")),
                   );
-
-                  // Trigger the sync!
-                  bool success = await GoogleDriveService().syncBackupToDrive();
-
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          success
-                              ? "✨ Backup successful!"
-                              : "❌ Backup failed. Check connection.",
-                        ),
-                        backgroundColor: success ? accentGreen : accentPeach,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                    );
-                    // If it failed, toggle the switch back off
-                    if (!success) {
-                      setState(() => _driveSyncEnabled = false);
-                    }
-                  }
                 }
-              },
-            ),
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Error exporting data.")),
+                );
+              }
+            },
           ),
         ],
       ),
