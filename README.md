@@ -151,4 +151,4 @@ Developed by **pak-pow**
 
 ## License
 
-This project is private. All rights reserved.
+All rights reserved.
