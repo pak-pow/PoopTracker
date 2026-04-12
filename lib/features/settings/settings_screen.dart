@@ -33,6 +33,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Toggle States
   bool _remindersEnabled = true;
 
+  TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
+
   // --- THEME COLORS ---
   final Color bgCream = const Color(0xFFFDFCF5);
   final Color textBrown = const Color(0xFF3A3A3A);
@@ -293,7 +295,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Daily Reminders
           ListTile(
-            horizontalTitleGap: 12,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 8,
@@ -315,7 +316,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(fontWeight: FontWeight.bold, color: textBrown),
             ),
             subtitle: Text(
-              "8:00 PM",
+              _reminderTime.format(context),
               style: TextStyle(color: textBrown.withOpacity(0.6), fontSize: 12),
             ),
             trailing: Switch(
@@ -328,6 +329,40 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 setState(() => _remindersEnabled = val);
               },
             ),
+            // UPDATE 2: Open the clock picker when tapped!
+            onTap: () async {
+              if (!_remindersEnabled)
+                return; // Don't let them change time if it's off
+
+              final TimeOfDay? pickedTime = await showTimePicker(
+                context: context,
+                initialTime: _reminderTime,
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: ColorScheme.light(
+                        primary: accentGreen, // Header background color
+                        onPrimary: Colors.white, // Header text color
+                        onSurface: textBrown, // Body text color
+                      ),
+                      textButtonTheme: TextButtonThemeData(
+                        style: TextButton.styleFrom(
+                          foregroundColor: accentGreen,
+                        ), // Button colors
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+
+              if (pickedTime != null) {
+                setState(() {
+                  _reminderTime = pickedTime;
+                });
+                // Note: We will add the SharedPreferences save here later!
+              }
+            },
           ),
           Divider(height: 1, color: bgCream, thickness: 2),
           // Edit Profile
