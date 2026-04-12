@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart'; // Used to format the Month/Year text
 import '../home/home_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -9,6 +11,10 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  // Calendar State
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay = DateTime.now();
+
   // --- THEME COLORS ---
   final Color bgCream = const Color(0xFFFDFCF5);
   final Color textBrown = const Color(0xFF3A3A3A);
@@ -26,9 +32,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
             Container(
               padding: const EdgeInsets.only(
                 top: 16,
-                left: 24,
-                right: 24,
-                bottom: 24,
+                left: 16,
+                right: 16,
+                bottom: 16,
               ),
               decoration: BoxDecoration(
                 color: Colors.white,
@@ -44,108 +50,94 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ],
               ),
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "Journal",
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: textBrown,
-                        ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8.0,
+                      vertical: 8.0,
+                    ),
+                    child: Text(
+                      "Journal",
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: textBrown,
                       ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: bgCream,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.chevron_left,
-                              color: accentGreen,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              "April 2026",
-                              style: TextStyle(
-                                color: textBrown,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              Icons.chevron_right,
-                              color: accentGreen,
-                              size: 20,
-                            ),
-                          ],
-                        ),
+                    ),
+                  ),
+
+                  // The Real Interactive Calendar
+                  TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    // Styling the Header to match your Figma
+                    headerStyle: HeaderStyle(
+                      formatButtonVisible: false,
+                      titleCentered: true,
+                      leftChevronIcon: Icon(
+                        Icons.chevron_left,
+                        color: accentGreen,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Days of Week
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: ["S", "M", "T", "W", "T", "F", "S"].map((day) {
-                      return SizedBox(
-                        width: 32,
-                        child: Text(
-                          day,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: textBrown.withOpacity(0.4),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Mock Calendar Grid (Matching your Figma)
-                  _buildMockCalendarRow(
-                    ["29", "30", "31", "1", "2", "3", "4"],
-                    isFaded: [true, true, true, false, false, false, false],
-                  ),
-                  _buildMockCalendarRow(
-                    ["5", "6", "7", "8", "9", "10", "11"],
-                    hasEntry: [false, false, true, true, false, true, false],
-                    selectedIndex: 6,
-                  ),
-                  _buildMockCalendarRow([
-                    "12",
-                    "13",
-                    "14",
-                    "15",
-                    "16",
-                    "17",
-                    "18",
-                  ]),
-                  _buildMockCalendarRow([
-                    "19",
-                    "20",
-                    "21",
-                    "22",
-                    "23",
-                    "24",
-                    "25",
-                  ]),
-                  _buildMockCalendarRow(
-                    ["26", "27", "28", "29", "30", "1", "2"],
-                    isFaded: [false, false, false, false, false, true, true],
+                      rightChevronIcon: Icon(
+                        Icons.chevron_right,
+                        color: accentGreen,
+                      ),
+                      titleTextStyle: TextStyle(
+                        color: textBrown,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                      headerPadding: const EdgeInsets.only(bottom: 16.0),
+                    ),
+                    // Styling the Days
+                    calendarStyle: CalendarStyle(
+                      selectedDecoration: BoxDecoration(
+                        color: accentPeach,
+                        shape: BoxShape.circle,
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: accentGreen.withOpacity(0.3),
+                        shape: BoxShape.circle,
+                      ),
+                      defaultTextStyle: TextStyle(
+                        color: textBrown,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      weekendTextStyle: TextStyle(
+                        color: textBrown.withOpacity(0.6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      outsideTextStyle: TextStyle(
+                        color: textBrown.withOpacity(0.2),
+                        fontWeight: FontWeight.w600,
+                      ),
+                      todayTextStyle: TextStyle(
+                        color: textBrown,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    // Styling the Mon, Tue, Wed row
+                    daysOfWeekStyle: DaysOfWeekStyle(
+                      weekdayStyle: TextStyle(
+                        color: textBrown.withOpacity(0.4),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                      weekendStyle: TextStyle(
+                        color: textBrown.withOpacity(0.4),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -157,7 +149,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 padding: const EdgeInsets.all(24),
                 children: [
                   Text(
-                    "RECENT ENTRIES",
+                    "ENTRIES FOR ${DateFormat('MMM d, yyyy').format(_selectedDay ?? DateTime.now()).toUpperCase()}",
                     style: TextStyle(
                       color: accentGreen,
                       fontWeight: FontWeight.bold,
@@ -167,7 +159,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Entry Card 1
+                  // Dummy Entry Card 1
                   _buildEntryCard(
                     icon: Icons.sentiment_satisfied_alt,
                     title: "Smooth",
@@ -178,7 +170,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   const SizedBox(height: 12),
 
-                  // Entry Card 2
+                  // Dummy Entry Card 2
                   _buildEntryCard(
                     icon: Icons.water_drop_outlined,
                     title: "Loose",
@@ -194,7 +186,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         ),
       ),
 
-      // --- BOTTOM NAVIGATION (Identical to Home, but Index 1 selected) ---
+      // --- BOTTOM NAVIGATION ---
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           boxShadow: [
@@ -209,15 +201,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
           child: BottomNavigationBar(
             backgroundColor: Colors.white,
-            currentIndex: 1, // JOURNAL is selected
+            currentIndex: 1,
             onTap: (index) {
               if (index == 0) {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const HomeScreen(),
+                    transitionDuration: Duration.zero,
+                  ),
                 );
               }
-              // Index 2 will go to settings later
             },
             selectedItemColor: accentPeach,
             unselectedItemColor: accentGreen.withOpacity(0.5),
@@ -261,64 +255,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  // --- HELPER WIDGETS ---
-
-  // Builds a row of 7 days for our UI mock calendar
-  Widget _buildMockCalendarRow(
-    List<String> days, {
-    List<bool>? isFaded,
-    List<bool>? hasEntry,
-    int selectedIndex = -1,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 16.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: List.generate(7, (index) {
-          bool faded = isFaded != null ? isFaded[index] : false;
-          bool entry = hasEntry != null ? hasEntry[index] : false;
-          bool selected = index == selectedIndex;
-
-          return Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: selected ? accentPeach : Colors.transparent,
-              shape: BoxShape.circle,
-            ),
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Text(
-                  days[index],
-                  style: TextStyle(
-                    color: selected
-                        ? Colors.white
-                        : (faded ? textBrown.withOpacity(0.2) : textBrown),
-                    fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-                  ),
-                ),
-                if (entry && !selected)
-                  Positioned(
-                    bottom: 2,
-                    child: Container(
-                      width: 4,
-                      height: 4,
-                      decoration: BoxDecoration(
-                        color: accentGreen.withOpacity(0.5),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
-  // Builds the beautiful entry cards with the new Calorie Badge
   Widget _buildEntryCard({
     required IconData icon,
     required String title,
@@ -343,14 +279,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Circular Icon Profile
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(color: bgCream, shape: BoxShape.circle),
             child: Icon(icon, color: iconColor, size: 24),
           ),
           const SizedBox(width: 16),
-          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,7 +320,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                // NEW CALORIE BADGE
                 Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
