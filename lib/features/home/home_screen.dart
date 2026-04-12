@@ -3,6 +3,7 @@ import '../journal/new_entry_screen.dart';
 import '../history/history_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../data/services/csv_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -13,11 +14,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _weeklyRhythm = 0;
+  String _nickname = 'Hazel'; // Default fallback
 
   @override
   void initState() {
     super.initState();
+    _loadNickname();
     _loadRhythm();
+  }
+
+  Future<void> _loadNickname() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nickname = prefs.getString('nickname') ?? 'Hazel';
+    });
   }
 
   Future<void> _loadRhythm() async {
@@ -50,12 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        "Good Morning, Hazel! ✨",
-                        style: TextStyle(
+                      Text(
+                        "Good Morning, $_nickname! ✨",
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
-                          color: textBrown,
+                          color: Color(0xFF3A3A3A),
                         ),
                       ),
                       const SizedBox(height: 4),
