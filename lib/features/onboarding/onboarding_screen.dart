@@ -184,14 +184,41 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             TextField(
               controller: _nameController,
               textAlign: TextAlign.center,
+
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: textBrown,
+              ),
+
+              cursorColor: accentGreen,
               decoration: InputDecoration(
-                hintText: "Enter your nickname...",
+                hintText: "e.g. Vince, Bub, etc...",
+                hintStyle: TextStyle(
+                  color: textBrown.withOpacity(0.4),
+                  fontWeight: FontWeight.normal,
+                  fontSize: 16,
+                ),
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 18,
+                  horizontal: 24,
+                ),
+
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(
+                    24,
+                  ), // Matches your button roundness exactly
+                  borderSide: BorderSide(
+                    color: accentGreen.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                ),
+
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
+                  borderSide: BorderSide(color: accentGreen, width: 2),
                 ),
               ),
             ),
