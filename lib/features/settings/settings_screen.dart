@@ -28,12 +28,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       // Load the saved avatar, or default to '🌸' if none exists
       _currentAvatar = prefs.getString('avatar') ?? '🌸';
+      // Load the switch state (default to true)
+      _remindersEnabled = prefs.getBool('remindersEnabled') ?? true;
+      // Load the time (default to 20:00 / 8:00 PM)
+      final hour = prefs.getInt('reminder_hour') ?? 20;
+      final minute = prefs.getInt('reminder_minute') ?? 0;
+      _reminderTime = TimeOfDay(hour: hour, minute: minute);
     });
   }
 
   // Toggle States
   bool _remindersEnabled = true;
-
   TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
 
   // --- THEME COLORS ---
@@ -326,8 +331,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               activeTrackColor: accentGreen.withOpacity(0.3),
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: bgCream,
-              onChanged: (val) {
+              onChanged: (val) async {
                 setState(() => _remindersEnabled = val);
+
+                // Save switch state to SharedPreferences
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('remindersEnabled', val);
+
                 if (val) {
                   // Turn ON: Schedule it
                   NotificationService().scheduleDailyReminder(_reminderTime);
@@ -337,7 +347,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 }
               },
             ),
-            // UPDATE 2: Open the clock picker when tapped!
             onTap: () async {
               if (!_remindersEnabled)
                 return; // Don't let them change time if it's off
@@ -368,6 +377,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 setState(() {
                   _reminderTime = pickedTime;
                 });
+
+                // Save new time to SharedPreferences
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setInt('reminder_hour', pickedTime.hour);
+                await prefs.setInt('reminder_minute', pickedTime.minute);
+
                 // When they pick a new time, immediately reschedule the alarm!
                 NotificationService().scheduleDailyReminder(pickedTime);
               }
@@ -387,12 +402,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 color: Color(0xFFFDFCF5), // bgCream
                 shape: BoxShape.circle,
               ),
-              child: Text(
-                _currentAvatar, // THIS IS THE DYNAMIC EMOJI!
-                style: const TextStyle(
-                  fontSize: 22, // Made it a bit bigger since emojis need room!
-                ),
-              ),
+              child: Text(_currentAvatar, style: const TextStyle(fontSize: 22)),
             ),
             title: const Text(
               "Edit Profile",
