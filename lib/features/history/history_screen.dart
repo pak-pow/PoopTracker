@@ -4,6 +4,7 @@ import 'package:intl/intl.dart'; // Used to format the Month/Year text
 import '../home/home_screen.dart';
 import '../../data/models/journal_entry.dart';
 import '../../data/services/csv_service.dart';
+import '../settings/settings_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
@@ -273,6 +274,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   context,
                   PageRouteBuilder(
                     pageBuilder: (_, __, ___) => const HomeScreen(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
+              } else if (index == 2) {
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const SettingsScreen(),
                     transitionDuration: Duration.zero,
                   ),
                 );

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../journal/new_entry_screen.dart';
 import '../history/history_screen.dart';
+import '../settings/settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -231,8 +232,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 Navigator.pushReplacement(
                   context,
                   PageRouteBuilder(
-                    pageBuilder: (context, animation1, animation2) =>
-                        const HistoryScreen(),
+                    pageBuilder: (_, __, ___) => const HistoryScreen(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
+              } else if (index == 2) {
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const SettingsScreen(),
                     transitionDuration: Duration.zero,
                   ),
                 );
