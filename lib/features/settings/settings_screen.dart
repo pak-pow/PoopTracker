@@ -94,36 +94,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _buildPreferencesCard(),
 
                   const SizedBox(height: 40),
-
-                  // LOG OUT BUTTON
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        // TODO: Log out logic
-                      },
-                      icon: Icon(Icons.logout, color: accentPeach),
-                      label: Text(
-                        "Log Out",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: accentPeach,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(
-                          color: accentPeach.withOpacity(0.3),
-                          width: 2,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        backgroundColor: Colors.white,
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: 24),
                 ],
               ),
