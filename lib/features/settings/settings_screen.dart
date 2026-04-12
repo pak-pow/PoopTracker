@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../home/home_screen.dart';
 import '../history/history_screen.dart';
+import '../../data/services/google_drive_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -270,9 +271,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
               activeTrackColor: accentPeach.withOpacity(0.3),
               inactiveThumbColor: Colors.white,
               inactiveTrackColor: bgCream,
-              onChanged: (val) {
+              onChanged: (val) async {
                 setState(() => _driveSyncEnabled = val);
-                // TODO: Trigger Google SignIn and Drive Setup
+
+                if (val == true) {
+                  // Show a loading snackbar
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          const Text("Syncing to Google Drive..."),
+                        ],
+                      ),
+                      backgroundColor: textBrown,
+                      behavior: SnackBarBehavior.floating,
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+
+                  // Trigger the sync!
+                  bool success = await GoogleDriveService().syncBackupToDrive();
+
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          success
+                              ? "✨ Backup successful!"
+                              : "❌ Backup failed. Check connection.",
+                        ),
+                        backgroundColor: success ? accentGreen : accentPeach,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    );
+                    // If it failed, toggle the switch back off
+                    if (!success) {
+                      setState(() => _driveSyncEnabled = false);
+                    }
+                  }
+                }
               },
             ),
           ),
