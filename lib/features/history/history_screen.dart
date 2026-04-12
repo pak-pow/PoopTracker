@@ -17,6 +17,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   // Calendar State
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
+  CalendarFormat _calendarFormat = CalendarFormat.month;
 
   List<JournalEntry> _dayEntries = [];
   bool _isLoading = false;
@@ -75,26 +76,66 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // --- HEADER ROW ---
                   Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8.0,
                       vertical: 8.0,
                     ),
-                    child: Text(
-                      "Journal",
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: textBrown,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Journal",
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: textBrown,
+                          ),
+                        ),
+                        // Month/Year Title (e.g., April 2026)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.chevron_left,
+                              color: accentGreen,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              DateFormat('MMMM yyyy').format(_focusedDay),
+                              style: TextStyle(
+                                color: textBrown,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Icon(
+                              Icons.chevron_right,
+                              color: accentGreen,
+                              size: 20,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
 
-                  // The Real Interactive Calendar
+                  // The Real Interactive Calendar (Figma Week View)
                   TableCalendar(
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
                     focusedDay: _focusedDay,
+                    calendarFormat: _calendarFormat,
+                    onFormatChanged: (format) {
+                      setState(() {
+                        _calendarFormat = format;
+                      });
+                    },
+                    availableCalendarFormats: const {
+                      CalendarFormat.month: 'Month',
+                    },
                     selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                     onDaySelected: (selectedDay, focusedDay) {
                       setState(() {
@@ -103,35 +144,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       });
                       _loadEntriesForDay(selectedDay);
                     },
-                    // Styling the Header to match your Figma
-                    headerStyle: HeaderStyle(
-                      formatButtonVisible: false,
-                      titleCentered: true,
-                      leftChevronIcon: Icon(
-                        Icons.chevron_left,
-                        color: accentGreen,
-                      ),
-                      rightChevronIcon: Icon(
-                        Icons.chevron_right,
-                        color: accentGreen,
-                      ),
-                      titleTextStyle: TextStyle(
-                        color: textBrown,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                      headerPadding: const EdgeInsets.only(bottom: 16.0),
-                    ),
+                    onPageChanged: (focusedDay) {
+                      setState(() {
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    // Hide default header because we made a custom one above
+                    headerVisible: false,
                     // Styling the Days
+                    // Styling the Days (Figma Accurate!)
                     calendarStyle: CalendarStyle(
+                      // The selected day (Solid Peach with White Text)
                       selectedDecoration: BoxDecoration(
                         color: accentPeach,
                         shape: BoxShape.circle,
                       ),
-                      todayDecoration: BoxDecoration(
-                        color: accentGreen.withOpacity(0.3),
-                        shape: BoxShape.circle,
+                      selectedTextStyle: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
+
+                      // Today's date (Hollow Green Outline with Green Text)
+                      todayDecoration: BoxDecoration(
+                        color: Colors.transparent,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: accentGreen,
+                          width: 2,
+                        ), // The clean outline!
+                      ),
+                      todayTextStyle: TextStyle(
+                        color: accentGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+
+                      // Default text styling
                       defaultTextStyle: TextStyle(
                         color: textBrown,
                         fontWeight: FontWeight.w600,
@@ -143,10 +190,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       outsideTextStyle: TextStyle(
                         color: textBrown.withOpacity(0.2),
                         fontWeight: FontWeight.w600,
-                      ),
-                      todayTextStyle: TextStyle(
-                        color: textBrown,
-                        fontWeight: FontWeight.bold,
                       ),
                     ),
                     // Styling the Mon, Tue, Wed row
@@ -174,23 +217,64 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       child: CircularProgressIndicator(
                         color: Color(0xFFA3B18A),
                       ),
-                    ) // accentGreen
+                    )
                   : _dayEntries.isEmpty
-                  ? Center(
+                  ? Padding(
+                      padding: const EdgeInsets.all(24.0),
                       child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(
-                            Icons.water_drop_outlined,
-                            size: 48,
-                            color: textBrown.withOpacity(0.2),
+                          // Header Text
+                          Text(
+                            DateFormat('MMMM d, yyyy')
+                                .format(_selectedDay ?? DateTime.now())
+                                .toUpperCase(),
+                            style: TextStyle(
+                              color: accentGreen,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                              letterSpacing: 1.2,
+                            ),
                           ),
                           const SizedBox(height: 16),
-                          Text(
-                            "No entries yet",
-                            style: TextStyle(
-                              color: textBrown.withOpacity(0.5),
-                              fontWeight: FontWeight.bold,
+                          // FIGMA EMPTY STATE CARD
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(32),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.grey.shade200,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.water_drop_outlined,
+                                  size: 40,
+                                  color: textBrown.withOpacity(0.2),
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  "No entries yet",
+                                  style: TextStyle(
+                                    color: textBrown,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "You haven't logged anything for this day.",
+                                  style: TextStyle(
+                                    color: textBrown.withOpacity(0.5),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -198,8 +282,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     )
                   : ListView.separated(
                       padding: const EdgeInsets.all(24),
-                      itemCount:
-                          _dayEntries.length + 1, // +1 for the header text
+                      itemCount: _dayEntries.length + 1,
                       separatorBuilder: (context, index) =>
                           const SizedBox(height: 12),
                       itemBuilder: (context, index) {
@@ -207,7 +290,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 4.0),
                             child: Text(
-                              "ENTRIES FOR ${DateFormat('MMM d, yyyy').format(_selectedDay ?? DateTime.now()).toUpperCase()}",
+                              DateFormat('MMMM d, yyyy')
+                                  .format(_selectedDay ?? DateTime.now())
+                                  .toUpperCase(),
                               style: TextStyle(
                                 color: accentGreen,
                                 fontWeight: FontWeight.bold,
@@ -234,11 +319,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         }
 
                         return Dismissible(
-                          // We need a unique key for Flutter to know WHICH item is being swiped
                           key: Key(entry.date.toIso8601String() + entry.notes),
-                          direction: DismissDirection
-                              .endToStart, // Only allow swiping Right to Left
-                          // The red background that reveals itself when you swipe
+                          direction: DismissDirection.endToStart,
                           background: Container(
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.only(right: 24.0),
@@ -253,16 +335,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               size: 32,
                             ),
                           ),
-
-                          // What happens when the swipe is completed
                           onDismissed: (direction) async {
-                            // 1. Delete it from the CSV file
                             await CsvService().deleteEntry(entry);
-
-                            // 2. Reload the UI for the current day
                             _loadEntriesForDay(_selectedDay ?? DateTime.now());
-
-                            // 3. Show a little confirmation
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: const Text("Entry deleted."),
@@ -271,8 +346,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               ),
                             );
                           },
-
-                          // The actual card itself
                           child: _buildEntryCard(
                             icon: entryIcon,
                             title: entry.type,
