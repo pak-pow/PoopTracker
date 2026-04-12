@@ -65,33 +65,38 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "$_greeting, $_nickname! ✨", // Uses dynamic time
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF3A3A3A),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "$_greeting, $_nickname! ✨",
+                          style: const TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF3A3A3A),
+                          ),
+                          // Added this so if a name is too long, it wraps nicely instead of breaking!
+                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Ready to track your day?",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: accentGreen.withOpacity(0.8),
-                          fontWeight: FontWeight.w600,
+                        const SizedBox(height: 4),
+                        Text(
+                          "Ready to track your day?",
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: accentGreen.withOpacity(0.8),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  SvgPicture.asset(
-                    'assets/icon_navbar.svg',
-                    height: 48,
-                    width: 48,
-                  ),
+                  const SizedBox(width: 16),
+                  Image.asset(
+                    'assets/icon_navbar.png',
+                    height: 32, // Changed from 48
+                    width: 32, // Changed from 48
+                  ), // Adds a tiny buffer between text and logo
                 ],
               ),
 
