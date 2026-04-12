@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../data/models/journal_entry.dart';
+import '../../data/services/csv_service.dart';
 
 class NewEntryScreen extends StatefulWidget {
   const NewEntryScreen({Key? key}) : super(key: key);
@@ -9,11 +11,18 @@ class NewEntryScreen extends StatefulWidget {
 
 class _NewEntryScreenState extends State<NewEntryScreen> {
   // --- STATE VARIABLES ---
-  String _selectedType = 'Smooth & Soft'; 
+  String _selectedType = 'Smooth & Soft';
   double _discomfortLevel = 1.0;
-  
+
   // Tag Management
-  final List<String> _availableTags = ['Hydrated', 'High Fiber', 'Stressed', 'Travel', 'Sick', 'Caffeine'];
+  final List<String> _availableTags = [
+    'Hydrated',
+    'High Fiber',
+    'Stressed',
+    'Travel',
+    'Sick',
+    'Caffeine',
+  ];
   final Set<String> _selectedTags = {};
 
   // Text Controllers
@@ -47,7 +56,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
         ),
         title: Text(
           "New Journal Entry",
-          style: TextStyle(color: textBrown, fontWeight: FontWeight.bold, fontSize: 20),
+          style: TextStyle(
+            color: textBrown,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
       ),
@@ -63,8 +76,14 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildTypeCard("Hard & Dry", Icons.sentiment_very_dissatisfied),
-                  _buildTypeCard("Smooth & Soft", Icons.sentiment_satisfied_alt),
+                  _buildTypeCard(
+                    "Hard & Dry",
+                    Icons.sentiment_very_dissatisfied,
+                  ),
+                  _buildTypeCard(
+                    "Smooth & Soft",
+                    Icons.sentiment_satisfied_alt,
+                  ),
                   _buildTypeCard("Loose & Watery", Icons.water_drop_outlined),
                 ],
               ),
@@ -77,7 +96,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
-                    BoxShadow(color: accentPeach.withOpacity(0.05), blurRadius: 15, offset: const Offset(0, 8)),
+                    BoxShadow(
+                      color: accentPeach.withOpacity(0.05),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
                   ],
                 ),
                 child: Column(
@@ -88,7 +111,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         _buildSectionHeader("DISCOMFORT LEVEL"),
                         Text(
                           "${_discomfortLevel.toInt()}/10",
-                          style: TextStyle(color: accentPeach, fontWeight: FontWeight.bold, fontSize: 18),
+                          style: TextStyle(
+                            color: accentPeach,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
                       ],
                     ),
@@ -99,8 +126,13 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                         inactiveTrackColor: bgCream,
                         thumbColor: Colors.white,
                         trackHeight: 8,
-                        thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 12, elevation: 4),
-                        overlayShape: const RoundSliderOverlayShape(overlayRadius: 24),
+                        thumbShape: const RoundSliderThumbShape(
+                          enabledThumbRadius: 12,
+                          elevation: 4,
+                        ),
+                        overlayShape: const RoundSliderOverlayShape(
+                          overlayRadius: 24,
+                        ),
                       ),
                       child: Slider(
                         value: _discomfortLevel,
@@ -117,8 +149,20 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text("None", style: TextStyle(color: textBrown.withOpacity(0.5), fontSize: 12)),
-                        Text("Severe", style: TextStyle(color: textBrown.withOpacity(0.5), fontSize: 12)),
+                        Text(
+                          "None",
+                          style: TextStyle(
+                            color: textBrown.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
+                        ),
+                        Text(
+                          "Severe",
+                          style: TextStyle(
+                            color: textBrown.withOpacity(0.5),
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ),
                   ],
@@ -139,9 +183,18 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                     backgroundColor: Colors.transparent,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
-                      side: BorderSide(color: accentGreen.withOpacity(0.5), style: BorderStyle.solid),
+                      side: BorderSide(
+                        color: accentGreen.withOpacity(0.5),
+                        style: BorderStyle.solid,
+                      ),
                     ),
-                    label: Text("+ Add Tag", style: TextStyle(color: accentGreen, fontWeight: FontWeight.w600)),
+                    label: Text(
+                      "+ Add Tag",
+                      style: TextStyle(
+                        color: accentGreen,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     onPressed: () {
                       // TODO: Show dialog to add custom tag
                     },
@@ -161,7 +214,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   hintStyle: TextStyle(color: textBrown.withOpacity(0.3)),
                   filled: true,
                   fillColor: Colors.white,
-                  suffixIcon: Icon(Icons.apple, color: accentPeach.withOpacity(0.5)),
+                  suffixIcon: Icon(
+                    Icons.apple,
+                    color: accentPeach.withOpacity(0.5),
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -194,9 +250,32 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 width: double.infinity,
                 height: 60,
                 child: ElevatedButton.icon(
-                  onPressed: () {
-                    // TODO: Save to CSV Service
-                    Navigator.pop(context); // Go back home after saving
+                  onPressed: () async {
+                    final newEntry = JournalEntry(
+                      date: DateTime.now(),
+                      type: _selectedType,
+                      discomfort: _discomfortLevel,
+                      tags: _selectedTags.toList(),
+                      calories: _caloriesController.text.trim(),
+                      notes: _notesController.text.trim(),
+                    );
+                    await CsvService().saveEntry(newEntry);
+
+                    if (mounted) {
+                      Navigator.pop(context);
+
+                      // Optional: Show a cozy little success message
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text("✨ Entry saved successfully!"),
+                          backgroundColor: accentGreen,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      );
+                    }
                   },
                   icon: const Icon(Icons.check_circle_outline, size: 24),
                   label: const Text(
@@ -206,7 +285,9 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accentGreen,
                     foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
                     elevation: 2,
                   ),
                 ),
@@ -224,15 +305,26 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: TextStyle(color: accentGreen, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.2),
+      style: TextStyle(
+        color: accentGreen,
+        fontWeight: FontWeight.bold,
+        fontSize: 13,
+        letterSpacing: 1.2,
+      ),
     );
   }
 
   Widget _buildTypeCard(String title, IconData icon) {
     bool isSelected = _selectedType == title;
     // Determine specific styling based on Figma design
-    Color selectedColor = title == 'Loose & Watery' ? softPink : (title == 'Hard & Dry' ? accentPeach.withOpacity(0.2) : accentGreen.withOpacity(0.2));
-    Color selectedBorder = title == 'Loose & Watery' ? accentPeach : (title == 'Hard & Dry' ? accentPeach : accentGreen);
+    Color selectedColor = title == 'Loose & Watery'
+        ? softPink
+        : (title == 'Hard & Dry'
+              ? accentPeach.withOpacity(0.2)
+              : accentGreen.withOpacity(0.2));
+    Color selectedBorder = title == 'Loose & Watery'
+        ? accentPeach
+        : (title == 'Hard & Dry' ? accentPeach : accentGreen);
 
     return GestureDetector(
       onTap: () {
@@ -251,13 +343,23 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
             color: isSelected ? selectedBorder : Colors.transparent,
             width: 2,
           ),
-          boxShadow: isSelected ? [] : [
-            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))
-          ],
+          boxShadow: isSelected
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
         ),
         child: Column(
           children: [
-            Icon(icon, size: 32, color: isSelected ? textBrown : textBrown.withOpacity(0.4)),
+            Icon(
+              icon,
+              size: 32,
+              color: isSelected ? textBrown : textBrown.withOpacity(0.4),
+            ),
             const SizedBox(height: 8),
             Text(
               title,
@@ -286,7 +388,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
       backgroundColor: Colors.white,
       selectedColor: accentGreen,
       checkmarkColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide.none),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+        side: BorderSide.none,
+      ),
       elevation: isSelected ? 2 : 0,
       shadowColor: accentGreen.withOpacity(0.3),
       onSelected: (bool selected) {
