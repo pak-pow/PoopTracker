@@ -13,7 +13,6 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   // Toggle States
-  bool _driveSyncEnabled = false;
   bool _remindersEnabled = true;
 
   // --- THEME COLORS ---
