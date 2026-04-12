@@ -32,13 +32,15 @@ class CsvService {
   // Get all entries for a specific day
   Future<List<JournalEntry>> getEntriesForDay(DateTime targetDate) async {
     final file = await _getLocalFile();
-    
+
     if (!(await file.exists())) {
       return []; // Return empty if no logs exist yet
     }
 
     final String fileContent = await file.readAsString();
-    final List<List<dynamic>> csvData = const CsvToListConverter().convert(fileContent);
+    final List<List<dynamic>> csvData = const CsvToListConverter().convert(
+      fileContent,
+    );
 
     List<JournalEntry> dayEntries = [];
 
@@ -46,8 +48,8 @@ class CsvService {
       if (row.isNotEmpty) {
         JournalEntry entry = JournalEntry.fromCsvRow(row);
         // Check if the entry's date matches the target date (ignoring the exact time)
-        if (entry.date.year == targetDate.year && 
-            entry.date.month == targetDate.month && 
+        if (entry.date.year == targetDate.year &&
+            entry.date.month == targetDate.month &&
             entry.date.day == targetDate.day) {
           dayEntries.add(entry);
         }
@@ -55,5 +57,38 @@ class CsvService {
     }
 
     return dayEntries;
+  }
+
+  // Get the count of unique days with entries in the last 7 days
+  Future<int> getWeeklyRhythmCount() async {
+    final file = await _getLocalFile();
+    if (!(await file.exists())) return 0;
+
+    final String fileContent = await file.readAsString();
+    final List<List<dynamic>> csvData = const CsvToListConverter().convert(
+      fileContent,
+    );
+
+    DateTime today = DateTime.now();
+    DateTime sevenDaysAgo = today.subtract(const Duration(days: 7));
+    Set<String> daysWithEntries = {};
+
+    for (var row in csvData) {
+      if (row.isNotEmpty) {
+        try {
+          DateTime entryDate = DateTime.parse(row[0].toString());
+          // Check if the entry is within the last 7 days
+          if (entryDate.isAfter(sevenDaysAgo)) {
+            // Save as a string (YYYY-MM-DD) so multiple entries on the same day only count as 1
+            daysWithEntries.add(
+              "${entryDate.year}-${entryDate.month}-${entryDate.day}",
+            );
+          }
+        } catch (e) {
+          // Ignore any malformed rows
+        }
+      }
+    }
+    return daysWithEntries.length;
   }
 }

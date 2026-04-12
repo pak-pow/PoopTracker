@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../journal/new_entry_screen.dart';
 import '../history/history_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../data/services/csv_service.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -11,7 +12,20 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _currentIndex = 0;
+  int _weeklyRhythm = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRhythm();
+  }
+
+  Future<void> _loadRhythm() async {
+    final count = await CsvService().getWeeklyRhythmCount();
+    setState(() {
+      _weeklyRhythm = count;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
