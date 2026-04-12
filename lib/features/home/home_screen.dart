@@ -73,7 +73,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: textBrown,
                       ),
                       onPressed: () {
-                        // TODO: Navigate to settings
+                        Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (_, __, ___) => const SettingsScreen(),
+                            transitionDuration: Duration.zero,
+                          ),
+                        );
                       },
                     ),
                   ),
