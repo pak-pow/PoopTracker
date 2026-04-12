@@ -3,6 +3,8 @@ import '../home/home_screen.dart';
 import '../history/history_screen.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:poop_tracker/data/services/csv_service.dart';
+import 'edit_profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -12,6 +14,22 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
+  String _currentAvatar = '🌸'; // Default fallback
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAvatar();
+  }
+
+  Future<void> _loadAvatar() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      // Load the saved avatar, or default to '🌸' if none exists
+      _currentAvatar = prefs.getString('avatar') ?? '🌸';
+    });
+  }
+
   // Toggle States
   bool _remindersEnabled = true;
 
@@ -27,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: bgCream,
       body: SafeArea(
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // --- HEADER ---
             Padding(
@@ -221,6 +240,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Offline Status
           ListTile(
+            horizontalTitleGap: 12,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 8,
@@ -244,6 +264,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           Divider(height: 1, color: bgCream, thickness: 2),
           ListTile(
+            horizontalTitleGap: 12,
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
@@ -302,6 +323,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           // Daily Reminders
           ListTile(
+            horizontalTitleGap: 12,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 8,
@@ -340,31 +362,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Divider(height: 1, color: bgCream, thickness: 2),
           // Edit Profile
           ListTile(
+            horizontalTitleGap: 12,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 20,
               vertical: 8,
             ),
             leading: Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: bgCream, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Color(0xFFFDFCF5), // bgCream
+                shape: BoxShape.circle,
+              ),
               child: Text(
-                "H",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: textBrown,
-                  fontSize: 16,
+                _currentAvatar, // THIS IS THE DYNAMIC EMOJI!
+                style: const TextStyle(
+                  fontSize: 22, // Made it a bit bigger since emojis need room!
                 ),
               ),
             ),
-            title: Text(
+            title: const Text(
               "Edit Profile",
-              style: TextStyle(fontWeight: FontWeight.bold, color: textBrown),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF3A3A3A), // textBrown
+              ),
             ),
             trailing: Icon(
               Icons.chevron_right,
-              color: textBrown.withOpacity(0.3),
+              color: const Color(0xFF3A3A3A).withOpacity(0.3),
             ),
-            onTap: () {},
+            onTap: () async {
+              // Wait for the EditProfileScreen to finish...
+              final didUpdate = await Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const EditProfileScreen(),
+                ),
+              );
+
+              // If it returns true (meaning they saved), reload the avatar!
+              if (didUpdate == true) {
+                _loadAvatar();
+              }
+            },
           ),
         ],
       ),
