@@ -136,7 +136,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fit: StackFit.expand,
                         children: [
                           CircularProgressIndicator(
-                            value: 5 / 7, // Hardcoded 5 out of 7 days for now
+                            value: _weeklyRhythm / 7,
                             strokeWidth: 12,
                             backgroundColor: bgCream,
                             valueColor: const AlwaysStoppedAnimation<Color>(
@@ -144,19 +144,19 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             strokeCap: StrokeCap.round,
                           ),
-                          const Column(
+                          Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "5",
-                                style: TextStyle(
+                                "$_weeklyRhythm",
+                                style: const TextStyle(
                                   fontSize: 40,
                                   fontWeight: FontWeight.bold,
                                   color: textBrown,
                                   height: 1.0,
                                 ),
                               ),
-                              Text(
+                              const Text(
                                 "DAYS",
                                 style: TextStyle(
                                   fontSize: 12,
@@ -181,9 +181,9 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: bgCream,
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        "🔥 5-Day Streak! Keep it up.",
-                        style: TextStyle(
+                      child: Text(
+                        "🔥 $_weeklyRhythm-Day Streak! Keep it up.",
+                        style: const TextStyle(
                           color: accentPeach,
                           fontWeight: FontWeight.bold,
                           fontSize: 14,

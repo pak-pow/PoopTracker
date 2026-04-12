@@ -233,17 +233,58 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           entryColor = accentPeach;
                         }
 
-                        return _buildEntryCard(
-                          icon: entryIcon,
-                          title: entry.type,
-                          time: DateFormat('hh:mm a').format(entry.date),
-                          notes: entry.notes.isEmpty
-                              ? "No notes added."
-                              : entry.notes,
-                          calories: entry.calories.isEmpty
-                              ? "0 kcal"
-                              : "${entry.calories} kcal",
-                          iconColor: entryColor,
+                        return Dismissible(
+                          // We need a unique key for Flutter to know WHICH item is being swiped
+                          key: Key(entry.date.toIso8601String() + entry.notes),
+                          direction: DismissDirection
+                              .endToStart, // Only allow swiping Right to Left
+                          // The red background that reveals itself when you swipe
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 24.0),
+                            margin: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.red.shade300,
+                              borderRadius: BorderRadius.circular(24),
+                            ),
+                            child: const Icon(
+                              Icons.delete_outline,
+                              color: Colors.white,
+                              size: 32,
+                            ),
+                          ),
+
+                          // What happens when the swipe is completed
+                          onDismissed: (direction) async {
+                            // 1. Delete it from the CSV file
+                            await CsvService().deleteEntry(entry);
+
+                            // 2. Reload the UI for the current day
+                            _loadEntriesForDay(_selectedDay ?? DateTime.now());
+
+                            // 3. Show a little confirmation
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text("Entry deleted."),
+                                backgroundColor: textBrown,
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                          },
+
+                          // The actual card itself
+                          child: _buildEntryCard(
+                            icon: entryIcon,
+                            title: entry.type,
+                            time: DateFormat('hh:mm a').format(entry.date),
+                            notes: entry.notes.isEmpty
+                                ? "No notes added."
+                                : entry.notes,
+                            calories: entry.calories.isEmpty
+                                ? "0 kcal"
+                                : "${entry.calories} kcal",
+                            iconColor: entryColor,
+                          ),
                         );
                       },
                     ),

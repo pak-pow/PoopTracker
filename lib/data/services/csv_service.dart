@@ -91,4 +91,28 @@ class CsvService {
     }
     return daysWithEntries.length;
   }
+
+  Future<void> deleteEntry(JournalEntry entryToDelete) async {
+    final file = await _getLocalFile();
+    if (!(await file.exists())) return;
+
+    final String fileContent = await file.readAsString();
+    final List<List<dynamic>> csvData = const CsvToListConverter().convert(
+      fileContent,
+    );
+
+    // Convert the entry we want to delete into a CSV row to compare
+    final targetRowString = entryToDelete.toCsvRow().join(',');
+
+    // Filter out the row that matches exactly
+    final List<List<dynamic>> updatedCsvData = csvData.where((row) {
+      return row.join(',') != targetRowString;
+    }).toList();
+
+    // Save the newly updated list back to the file
+    final String newCsvContent = const ListToCsvConverter().convert(
+      updatedCsvData,
+    );
+    await file.writeAsString(newCsvContent);
+  }
 }
