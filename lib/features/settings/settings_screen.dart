@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:poop_tracker/data/services/csv_service.dart';
 import 'edit_profile_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../data/services/notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -327,6 +328,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               inactiveTrackColor: bgCream,
               onChanged: (val) {
                 setState(() => _remindersEnabled = val);
+                if (val) {
+                  // Turn ON: Schedule it
+                  NotificationService().scheduleDailyReminder(_reminderTime);
+                } else {
+                  // Turn OFF: Cancel everything
+                  NotificationService().cancelAllNotifications();
+                }
               },
             ),
             // UPDATE 2: Open the clock picker when tapped!
@@ -360,7 +368,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 setState(() {
                   _reminderTime = pickedTime;
                 });
-                // Note: We will add the SharedPreferences save here later!
+                // When they pick a new time, immediately reschedule the alarm!
+                NotificationService().scheduleDailyReminder(pickedTime);
               }
             },
           ),
