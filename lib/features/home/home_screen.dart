@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../journal/new_entry_screen.dart';
+import '../history/history_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -226,9 +227,16 @@ class _HomeScreenState extends State<HomeScreen> {
             backgroundColor: Colors.white,
             currentIndex: _currentIndex,
             onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
+              if (index == 1) {
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (context, animation1, animation2) =>
+                        const HistoryScreen(),
+                    transitionDuration: Duration.zero,
+                  ),
+                );
+              }
             },
             selectedItemColor: accentPeach,
             unselectedItemColor: accentGreen.withOpacity(0.5),
