@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
-import '../home/home_screen.dart';
-import '../history/history_screen.dart';
-import '../journal/new_entry_screen.dart';
 import 'edit_profile_screen.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
 

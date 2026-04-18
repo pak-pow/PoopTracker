@@ -6,8 +6,6 @@ import '../../data/models/journal_entry.dart';
 import '../../data/services/csv_service.dart';
 import '../journal/new_entry_screen.dart';
 import '../history/history_screen.dart';
-import '../settings/settings_screen.dart';
-import '../diet/diet_screen.dart';
 import 'notifications_screen.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
 
