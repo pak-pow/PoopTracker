@@ -5,6 +5,7 @@ import '../home/home_screen.dart';
 import '../history/history_screen.dart';
 import '../journal/new_entry_screen.dart';
 import 'edit_profile_screen.dart';
+import '../../core/widgets/custom_bottom_nav.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -374,76 +375,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
       extendBody: true,
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceLowest,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: AppTheme.sunlightShadow,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: BottomNavigationBar(
-            backgroundColor: AppTheme.surfaceLowest,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: 3,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            selectedItemColor: AppTheme.secondary,
-            unselectedItemColor: AppTheme.outline,
-            selectedLabelStyle: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(fontSize: 10, color: AppTheme.secondary),
-            unselectedLabelStyle: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(fontSize: 10),
-            elevation: 0,
-            onTap: (index) {
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const HomeScreen(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              } else if (index == 1) {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const HistoryScreen(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              } else if (index == 2) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NewEntryScreen(),
-                  ),
-                );
-              }
-            },
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                label: 'HOME',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_today_rounded),
-                label: 'HISTORY',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle_outline, size: 28),
-                label: 'ENTRY',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings),
-                label: 'SETTINGS',
-              ),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: const CustomBottomNav(currentIndex: 3),
     );
   }
 }

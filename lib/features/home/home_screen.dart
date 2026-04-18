@@ -9,6 +9,7 @@ import '../history/history_screen.dart';
 import '../settings/settings_screen.dart';
 import '../diet/diet_screen.dart';
 import 'notifications_screen.dart';
+import '../../core/widgets/custom_bottom_nav.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -61,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(
-                top: 104,
+                top: 60,
                 left: 24,
                 right: 24,
                 bottom: 120,
@@ -328,93 +329,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
       extendBody: true,
 
-      // --- HYBRID FLOATING PILL + OVERLAPPING BUTTON ---
-      bottomNavigationBar: SafeArea(
-        child: Container(
-          height: 100, // Total height to accommodate the popping out button
-          margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            clipBehavior:
-                Clip.none, // Allows the button to break out of bounds safely
-            children: [
-              // 1. THE FLOATING WHITE PILL
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  height: 70,
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceLowest,
-                    borderRadius: BorderRadius.circular(
-                      36,
-                    ), // Super round pill edges
-                    boxShadow: AppTheme.sunlightShadow,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildNavItem(
-                        icon: Icons.home_filled,
-                        label: 'Home',
-                        index: 0,
-                        currentIndex: 0,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.calendar_today_rounded,
-                        label: 'History',
-                        index: 1,
-                        currentIndex: 0,
-                      ),
-
-                      const SizedBox(
-                        width: 56,
-                      ), // The empty gap for the hovering button
-
-                      _buildNavItem(
-                        icon: Icons.restaurant_outlined,
-                        label: 'Diet',
-                        index: 2,
-                        currentIndex: 0,
-                      ),
-                      _buildNavItem(
-                        icon: Icons.settings_outlined,
-                        label: 'Settings',
-                        index: 3,
-                        currentIndex: 0,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              // 2. THE HOVERING ADD BUTTON
-              Positioned(
-                top:
-                    5, // Pulls the button up so it overlaps the top edge of the pill
-                child: SizedBox(
-                  height: 60,
-                  width: 60,
-                  child: FloatingActionButton(
-                    backgroundColor: AppTheme.secondary,
-                    elevation: 4,
-                    shape: const CircleBorder(),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NewEntryScreen(),
-                        ),
-                      ).then((_) => _loadDashboardData());
-                    },
-                    child: const Icon(Icons.add, size: 32, color: Colors.white),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+      bottomNavigationBar: CustomBottomNav(
+        currentIndex: 0, // 0 means Home is highlighted
+        onEntryAdded:
+            _loadDashboardData, // Automatically refreshes the streak/history when a log is added
       ),
     );
   }

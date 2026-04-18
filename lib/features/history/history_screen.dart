@@ -7,6 +7,7 @@ import '../../data/services/csv_service.dart';
 import '../home/home_screen.dart';
 import '../journal/new_entry_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../core/widgets/custom_bottom_nav.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({Key? key}) : super(key: key);
@@ -241,78 +242,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
       // --- NEW 4-BUTTON BOTTOM NAVIGATION ---
       extendBody: true,
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceLowest,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: AppTheme.sunlightShadow,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: BottomNavigationBar(
-            backgroundColor: AppTheme.surfaceLowest,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: 1, // History is active!
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            selectedItemColor: AppTheme.secondary,
-            unselectedItemColor: AppTheme.outline,
-            selectedLabelStyle: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(fontSize: 10, color: AppTheme.secondary),
-            unselectedLabelStyle: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(fontSize: 10),
-            elevation: 0,
-            onTap: (index) {
-              if (index == 0) {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const HomeScreen(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              } else if (index == 2) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NewEntryScreen(),
-                  ),
-                ).then(
-                  (_) => _loadEntriesForDay(_selectedDay ?? DateTime.now()),
-                );
-              } else if (index == 3) {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const SettingsScreen(),
-                    transitionDuration: Duration.zero,
-                  ),
-                );
-              }
-            },
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_outlined),
-                label: 'HOME',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_today_rounded),
-                label: 'HISTORY',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle_outline, size: 28),
-                label: 'ENTRY',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                label: 'SETTINGS',
-              ),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: const CustomBottomNav(
+        currentIndex: 1,
+      ), // 1 highlights History!
     );
   }
 

@@ -4,6 +4,7 @@ import '../home/home_screen.dart';
 import '../history/history_screen.dart';
 import '../journal/new_entry_screen.dart';
 import '../settings/settings_screen.dart';
+import '../../core/widgets/custom_bottom_nav.dart';
 
 class DietScreen extends StatefulWidget {
   const DietScreen({Key? key}) : super(key: key);
@@ -183,63 +184,9 @@ class _DietScreenState extends State<DietScreen> {
 
       // --- MATCHING NOTCHED BOTTOM BAR ---
       extendBody: true,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      floatingActionButton: Container(
-        margin: const EdgeInsets.only(top: 32),
-        height: 64,
-        width: 64,
-        child: FloatingActionButton(
-          backgroundColor: AppTheme.secondary,
-          elevation: 6,
-          shape: const CircleBorder(),
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NewEntryScreen()),
-            );
-          },
-          child: const Icon(Icons.add, size: 32, color: Colors.white),
-        ),
-      ),
-      bottomNavigationBar: BottomAppBar(
-        color: AppTheme.surfaceLowest,
-        shape: const CircularNotchedRectangle(),
-        notchMargin: 10.0,
-        elevation: 20,
-        child: SizedBox(
-          height: 70,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(
-                icon: Icons.home_filled,
-                label: 'Home',
-                index: 0,
-                currentIndex: 2,
-              ), // Index 2 is Diet!
-              _buildNavItem(
-                icon: Icons.calendar_today_rounded,
-                label: 'History',
-                index: 1,
-                currentIndex: 2,
-              ),
-              const SizedBox(width: 48), // Space for floating button
-              _buildNavItem(
-                icon: Icons.restaurant_outlined,
-                label: 'Diet',
-                index: 2,
-                currentIndex: 2,
-              ),
-              _buildNavItem(
-                icon: Icons.settings_outlined,
-                label: 'Settings',
-                index: 3,
-                currentIndex: 2,
-              ),
-            ],
-          ),
-        ),
-      ),
+      bottomNavigationBar: const CustomBottomNav(
+        currentIndex: 2,
+      ), // 2 highlights Diet!
     );
   }
 
