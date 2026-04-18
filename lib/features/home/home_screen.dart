@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/journal_entry.dart';
 import '../../data/services/csv_service.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../journal/new_entry_screen.dart';
 import '../history/history_screen.dart';
 import 'notifications_screen.dart';
@@ -25,11 +26,25 @@ class _HomeScreenState extends State<HomeScreen> {
   Map<String, String> _recentMeals = {};
   int _recentTotalCalories = 0;
 
+  final GlobalKey _keyStreak = GlobalKey();
+  final GlobalKey _keyLogButton = GlobalKey();
+  final GlobalKey _keyNotifications = GlobalKey();
+  bool _needsTour = false;
+
   @override
   void initState() {
     super.initState();
+    _checkTour();
     _loadNickname();
     _loadDashboardData();
+  }
+
+  Future<void> _checkTour() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('has_seen_tour') ?? false)) {
+      await prefs.setBool('has_seen_tour', true);
+      if (mounted) setState(() => _needsTour = true);
+    }
   }
 
   Future<void> _loadNickname() async {
@@ -78,278 +93,334 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.only(
-                top: 60,
-                left: 24,
-                right: 24,
-                bottom: 120,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "$_greeting, $_nickname! 👋",
-                    style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      fontSize: 26,
-                      letterSpacing: -0.5,
-                    ),
+    return ShowCaseWidget(
+      blurValue: 1,
+      builder: (innerContext) {
+        if (_needsTour) {
+          _needsTour = false;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Future.delayed(const Duration(milliseconds: 500), () {
+              if (innerContext.mounted) {
+                ShowCaseWidget.of(
+                  innerContext,
+                ).startShowCase([_keyStreak, _keyLogButton, _keyNotifications]);
+              }
+            });
+          });
+        }
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: Stack(
+            children: [
+              SafeArea(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(
+                    top: 60,
+                    left: 24,
+                    right: 24,
+                    bottom: 120,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    "Ready for your daily reflection?",
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(fontSize: 15),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // --- HYBRID STREAK & WEEKLY RHYTHM CARD ---
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceLow,
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: AppTheme.secondary.withOpacity(0.15),
-                                shape: BoxShape.circle,
-                              ),
-                              alignment: Alignment.center,
-                              child: const Text(
-                                "🔥",
-                                style: TextStyle(fontSize: 28),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "CURRENT STREAK",
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  "$_streakCount Days",
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .displayMedium
-                                      ?.copyWith(
-                                        color: AppTheme.secondary,
-                                        fontSize: 24,
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 20),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-                              .asMap()
-                              .entries
-                              .map((entry) {
-                                bool isActive =
-                                    entry.key <
-                                    (_streakCount > 7 ? 7 : _streakCount);
-                                return Container(
-                                  width: 36,
-                                  height: 36,
-                                  decoration: BoxDecoration(
-                                    color: isActive
-                                        ? AppTheme.secondary
-                                        : AppTheme.outline.withOpacity(0.2),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    entry.value,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium
-                                        ?.copyWith(
-                                          color: isActive
-                                              ? Colors.white
-                                              : AppTheme.textVariant
-                                                    .withOpacity(0.5),
-                                          fontSize: 14,
-                                        ),
-                                  ),
-                                );
-                              })
-                              .toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: () async {
-                        await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const NewEntryScreen(),
-                          ),
-                        );
-                        _loadDashboardData();
-                      },
-                      icon: const Icon(Icons.add_circle, size: 24),
-                      label: const Text(
-                        "Log Today",
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.secondary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        elevation: 8,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Recent Entry",
+                        "$_greeting, $_nickname! 👋",
+                        style: Theme.of(context).textTheme.displayMedium
+                            ?.copyWith(fontSize: 26, letterSpacing: -0.5),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        "Ready for your daily reflection?",
                         style: Theme.of(
                           context,
-                        ).textTheme.titleLarge?.copyWith(fontSize: 18),
+                        ).textTheme.bodyMedium?.copyWith(fontSize: 15),
                       ),
-                      GestureDetector(
-                        onTap: () => Navigator.pushReplacement(
-                          context,
-                          PageRouteBuilder(
-                            pageBuilder: (_, __, ___) => const HistoryScreen(),
-                            transitionDuration: Duration.zero,
-                          ),
-                        ),
-                        child: Text(
-                          "VIEW HISTORY",
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(color: AppTheme.secondary),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
+                      const SizedBox(height: 24),
 
-                  _recentEntry == null
-                      ? Container(
+                      // --- HYBRID STREAK & WEEKLY RHYTHM CARD ---
+                      Showcase(
+                        key: _keyStreak,
+                        title: 'Your History',
+                        description:
+                            'Consistency is key. Watch this streak grow as you poop and journal everyday!',
+                        targetShapeBorder: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(24),
+                          padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
-                            color: AppTheme.surfaceLowest,
+                            color: AppTheme.surfaceLow,
                             borderRadius: BorderRadius.circular(24),
-                            boxShadow: AppTheme.sunlightShadow,
                           ),
                           child: Column(
                             children: [
-                              Icon(
-                                Icons.spa_outlined,
-                                color: AppTheme.textVariant.withOpacity(0.3),
-                                size: 32,
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.secondary.withOpacity(
+                                        0.15,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: const Text(
+                                      "🔥",
+                                      style: TextStyle(fontSize: 28),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "CURRENT STREAK",
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.labelSmall,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        "$_streakCount Days",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .displayMedium
+                                            ?.copyWith(
+                                              color: AppTheme.secondary,
+                                              fontSize: 24,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 12),
-                              Text(
-                                "No logs yet. You're doing great!",
-                                style: Theme.of(context).textTheme.bodyMedium,
+                              const SizedBox(height: 20),
+
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+                                    .asMap()
+                                    .entries
+                                    .map((entry) {
+                                      bool isActive =
+                                          entry.key <
+                                          (_streakCount > 7 ? 7 : _streakCount);
+                                      return Container(
+                                        width: 36,
+                                        height: 36,
+                                        decoration: BoxDecoration(
+                                          color: isActive
+                                              ? AppTheme.secondary
+                                              : AppTheme.outline.withOpacity(
+                                                  0.2,
+                                                ),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: Text(
+                                          entry.value,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                color: isActive
+                                                    ? Colors.white
+                                                    : AppTheme.textVariant
+                                                          .withOpacity(0.5),
+                                                fontSize: 14,
+                                              ),
+                                        ),
+                                      );
+                                    })
+                                    .toList(),
                               ),
                             ],
                           ),
-                        )
-                      : _buildRecentEntryCard(_recentEntry!),
-                ],
-              ),
-            ),
-          ),
-
-          // --- FIXED TOP BAR ---
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 100,
-              padding: const EdgeInsets.only(top: 40, left: 24, right: 16),
-              decoration: BoxDecoration(
-                color: AppTheme.background.withOpacity(0.95),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: const BoxDecoration(shape: BoxShape.circle),
-                        clipBehavior: Clip.hardEdge,
-                        child: Image.asset(
-                          'assets/logo_capybara.png',
-                          fit: BoxFit.cover,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        "Organic Journal",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      const SizedBox(height: 16),
+
+                      Showcase(
+                        key: _keyLogButton,
+                        title: 'Log Today',
+                        description:
+                            'Start your journey here! Tap this button to log a new entry.',
+                        targetShapeBorder: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton.icon(
+                            onPressed: () async {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const NewEntryScreen(),
+                                ),
+                              );
+                              _loadDashboardData();
+                            },
+                            icon: const Icon(Icons.add_circle, size: 24),
+                            label: const Text(
+                              "Log Today",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.secondary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              elevation: 8,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            "Recent Entry",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleLarge?.copyWith(fontSize: 18),
+                          ),
+                          GestureDetector(
+                            onTap: () => Navigator.pushReplacement(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder: (_, __, ___) =>
+                                    const HistoryScreen(),
+                                transitionDuration: Duration.zero,
+                              ),
+                            ),
+                            child: Text(
+                              "VIEW HISTORY",
+                              style: Theme.of(context).textTheme.labelSmall
+                                  ?.copyWith(color: AppTheme.secondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      _recentEntry == null
+                          ? Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surfaceLowest,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: AppTheme.sunlightShadow,
+                              ),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.spa_outlined,
+                                    color: AppTheme.textVariant.withOpacity(
+                                      0.3,
+                                    ),
+                                    size: 32,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    "No logs yet. You're doing great!",
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodyMedium,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : _buildRecentEntryCard(_recentEntry!),
+                    ],
+                  ),
+                ),
+              ),
+
+              // --- FIXED TOP BAR ---
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 100,
+                  padding: const EdgeInsets.only(top: 40, left: 24, right: 16),
+                  decoration: BoxDecoration(
+                    color: AppTheme.background.withOpacity(0.95),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                            ),
+                            clipBehavior: Clip.hardEdge,
+                            child: Image.asset(
+                              'assets/logo_capybara.png',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Text(
+                            "Organic Journal",
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: AppTheme.primary,
+                                  fontSize: 18,
+                                ),
+                          ),
+                        ],
+                      ),
+                      Showcase(
+                        key: _keyNotifications,
+                        title: 'Reminders',
+                        description:
+                            'Never miss a day. See your upcoming reminders mapped natively to your phone.',
+                        child: IconButton(
+                          icon: const Icon(Icons.notifications_outlined),
                           color: AppTheme.primary,
-                          fontSize: 18,
+                          onPressed: () {
+                            Navigator.push(
+                              innerContext,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const NotificationsScreen(),
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.notifications_outlined),
-                    color: AppTheme.primary,
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const NotificationsScreen(),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ],
-      ),
 
-      extendBody: true,
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: 0,
-        onEntryAdded: _loadDashboardData,
-      ),
+          extendBody: true,
+          bottomNavigationBar: CustomBottomNav(
+            currentIndex: 0,
+            onEntryAdded: _loadDashboardData,
+          ),
+        );
+      },
     );
   }
 
@@ -492,9 +563,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     "🔥 $_recentTotalCalories kcal total",
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.secondary,
-                          fontSize: 10,
-                        ),
+                      color: AppTheme.secondary,
+                      fontSize: 10,
+                    ),
                   ),
               ],
             ),
