@@ -54,6 +54,9 @@ dependencies:
 
   flutter_svg: ^2.0.10
 
+  google_fonts: ^6.2.1
+  material_symbols_icons: ^4.23.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -79,6 +82,7 @@ flutter:
     - assets/icon_navbar.png
     - assets/icon.png
     - assets/icon_favicon.png
+    - assets/logo_capybara.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

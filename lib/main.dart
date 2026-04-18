@@ -27,7 +27,7 @@ class HazelJournalApp extends StatelessWidget {
     return MaterialApp(
       title: 'Personal Journal',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.cozyTheme,
+      theme: AppTheme.organicTheme,
       home: isFirstLaunch ? const OnboardingScreen() : const HomeScreen(),
     );
   }
