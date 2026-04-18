@@ -17,20 +17,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _weeklyRhythm = 0;
-  String _nickname = 'Hazel';
-  JournalEntry? _recentEntry; // NEW: State variable for our dynamic entry!
+  String _nickname = 'user';
+  JournalEntry? _recentEntry;
 
   @override
   void initState() {
     super.initState();
     _loadNickname();
-    _loadDashboardData(); // NEW: Loads rhythm AND recent entry
+    _loadDashboardData();
   }
 
   Future<void> _loadNickname() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _nickname = prefs.getString('nickname') ?? 'Hazel';
+      _nickname = prefs.getString('nickname') ?? 'user';
     });
   }
 
@@ -58,11 +58,12 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           SafeArea(
             child: SingleChildScrollView(
+              // TIGHTENED PADDING
               padding: const EdgeInsets.only(
-                top: 120,
+                top: 100,
                 left: 24,
                 right: 24,
-                bottom: 120,
+                bottom: 90,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,18 +75,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 2),
                   Text(
                     "Ready for your daily reflection?",
                     style: Theme.of(
                       context,
                     ).textTheme.bodyMedium?.copyWith(fontSize: 15),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 20), // TIGHTENED
 
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(20), // TIGHTENED
                     decoration: BoxDecoration(
                       color: AppTheme.surfaceLow,
                       borderRadius: BorderRadius.circular(24),
@@ -106,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 16),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -144,11 +145,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16), // TIGHTENED
 
                   SizedBox(
                     width: double.infinity,
-                    height: 64,
+                    height: 56, // TIGHTENED
                     child: ElevatedButton.icon(
                       onPressed: () async {
                         await Navigator.push(
@@ -157,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             builder: (context) => const NewEntryScreen(),
                           ),
                         );
-                        _loadDashboardData(); // Refresh the card when coming back!
+                        _loadDashboardData();
                       },
                       icon: const Icon(Icons.add_circle, size: 24),
                       label: const Text(
@@ -177,7 +178,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 24), // TIGHTENED
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -205,13 +206,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
 
-                  // --- DYNAMIC RECENT ENTRY RENDERING ---
                   _recentEntry == null
                       ? Container(
                           width: double.infinity,
-                          padding: const EdgeInsets.all(32),
+                          padding: const EdgeInsets.all(24),
                           decoration: BoxDecoration(
                             color: AppTheme.surfaceLowest,
                             borderRadius: BorderRadius.circular(24),
@@ -354,7 +354,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Helper widget to render the dynamic data beautifully
   Widget _buildRecentEntryCard(JournalEntry entry) {
     String emoji = "🍌";
     String severity = "LOGGED";
@@ -389,7 +388,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String dateStr = DateFormat('MMM d').format(entry.date).toUpperCase();
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20), // TIGHTENED
       decoration: BoxDecoration(
         color: AppTheme.surfaceLowest,
         borderRadius: BorderRadius.circular(24),
@@ -424,18 +423,18 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Row(
             children: [
               Container(
-                width: 54,
-                height: 54,
+                width: 50,
+                height: 50,
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceLow,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 alignment: Alignment.center,
-                child: Text(emoji, style: const TextStyle(fontSize: 28)),
+                child: Text(emoji, style: const TextStyle(fontSize: 26)),
               ),
               const SizedBox(width: 16),
               Expanded(

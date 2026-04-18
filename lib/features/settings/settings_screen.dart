@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/theme/app_theme.dart';
 import '../home/home_screen.dart';
 import '../history/history_screen.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:poop_tracker/data/services/csv_service.dart';
+import '../journal/new_entry_screen.dart';
 import 'edit_profile_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../data/services/notification_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -15,117 +14,389 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _currentAvatar = '🌸'; // Default fallback
+  String _nickname = 'Hazel';
+  String _avatar = '🌿';
+  bool _remindersEnabled = true;
 
   @override
   void initState() {
     super.initState();
-    _loadAvatar();
+    _loadProfileData();
   }
 
-  Future<void> _loadAvatar() async {
+  Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      // Load the saved avatar, or default to '🌸' if none exists
-      _currentAvatar = prefs.getString('avatar') ?? '🌸';
-      // Load the switch state (default to true)
+      _nickname = prefs.getString('nickname') ?? 'Hazel';
+      _avatar = prefs.getString('avatar') ?? '🌿';
       _remindersEnabled = prefs.getBool('remindersEnabled') ?? true;
-      // Load the time (default to 20:00 / 8:00 PM)
-      final hour = prefs.getInt('reminder_hour') ?? 20;
-      final minute = prefs.getInt('reminder_minute') ?? 0;
-      _reminderTime = TimeOfDay(hour: hour, minute: minute);
     });
   }
-
-  // Toggle States
-  bool _remindersEnabled = true;
-  TimeOfDay _reminderTime = const TimeOfDay(hour: 20, minute: 0);
-
-  // --- THEME COLORS ---
-  final Color bgCream = const Color(0xFFFDFCF5);
-  final Color textBrown = const Color(0xFF3A3A3A);
-  final Color accentGreen = const Color(0xFFA3B18A);
-  final Color accentPeach = const Color(0xFFE29578);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgCream,
+      backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // --- HEADER ---
             Padding(
               padding: const EdgeInsets.only(
-                top: 24,
+                top: 16,
                 left: 24,
                 right: 24,
-                bottom: 16,
+                bottom: 8,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Account & Sync",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: textBrown,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(shape: BoxShape.circle),
+                        clipBehavior: Clip.hardEdge,
+                        child: Image.asset(
+                          'assets/logo_capybara.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        "The Organic Journal",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppTheme.primary,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "Manage your data and preferences",
-                    style: TextStyle(
-                      color: textBrown.withOpacity(0.6),
-                      fontSize: 14,
-                    ),
-                  ),
+                  Icon(Icons.notifications_outlined, color: AppTheme.primary),
                 ],
               ),
             ),
 
-            // --- CONTENT ---
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  _buildSectionHeader("DATA HANDLING"),
-                  const SizedBox(height: 12),
-                  _buildDataCard(),
+              child: SingleChildScrollView(
+                // TIGHTENED BOTTOM PADDING
+                padding: const EdgeInsets.only(
+                  left: 24,
+                  right: 24,
+                  top: 12,
+                  bottom: 90,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20), // TIGHTENED
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceLowest,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: AppTheme.sunlightShadow,
+                      ),
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceLow,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppTheme.primaryContainer,
+                                width: 3,
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              _avatar,
+                              style: const TextStyle(fontSize: 40),
+                            ),
+                          ),
+                          const SizedBox(height: 12), // TIGHTENED
+                          Text(
+                            _nickname,
+                            style: Theme.of(
+                              context,
+                            ).textTheme.displayMedium?.copyWith(fontSize: 24),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            "Daily Journaling since 2023",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyMedium?.copyWith(fontSize: 13),
+                          ),
+                          const SizedBox(height: 16), // TIGHTENED
+                          SizedBox(
+                            width: double.infinity,
+                            height: 48,
+                            child: ElevatedButton(
+                              onPressed: () async {
+                                final result = await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const EditProfileScreen(),
+                                  ),
+                                );
+                                if (result == true) _loadProfileData();
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.secondary,
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                              ),
+                              child: const Text(
+                                "Edit Profile",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24), // TIGHTENED
 
-                  const SizedBox(height: 32),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "REMINDERS",
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        Icon(
+                          Icons.notifications_active_outlined,
+                          color: AppTheme.textVariant.withOpacity(0.5),
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceLow,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: const BoxDecoration(
+                                  color: AppTheme.surfaceLowest,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.alarm,
+                                  color: AppTheme.primary,
+                                  size: 20,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "Daily Check-in",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontSize: 15),
+                                  ),
+                                  Text(
+                                    "8:30 PM",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Switch(
+                            value: _remindersEnabled,
+                            activeColor: AppTheme.surfaceLowest,
+                            activeTrackColor: AppTheme.primaryContainer,
+                            inactiveThumbColor: AppTheme.outline,
+                            inactiveTrackColor: AppTheme.surfaceLowest,
+                            onChanged: (val) async {
+                              final prefs =
+                                  await SharedPreferences.getInstance();
+                              await prefs.setBool('remindersEnabled', val);
+                              setState(() => _remindersEnabled = val);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24), // TIGHTENED
 
-                  _buildSectionHeader("PREFERENCES"),
-                  const SizedBox(height: 12),
-                  _buildPreferencesCard(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "DATA & PRIVACY",
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                        Icon(
+                          Icons.storage_outlined,
+                          color: AppTheme.textVariant.withOpacity(0.5),
+                          size: 18,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surfaceLowest,
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: AppTheme.outline.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.file_download_outlined,
+                                color: AppTheme.textMain,
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                "Export CSV",
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.titleMedium?.copyWith(fontSize: 15),
+                              ),
+                            ],
+                          ),
+                          const Icon(
+                            Icons.chevron_right,
+                            color: AppTheme.outline,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFDAD6).withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(
+                                Icons.delete_outline,
+                                color: Color(0xFFBA1A1A),
+                              ),
+                              const SizedBox(width: 16),
+                              Text(
+                                "Delete All Data",
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontSize: 15,
+                                      color: const Color(0xFFBA1A1A),
+                                    ),
+                              ),
+                            ],
+                          ),
+                          const Icon(
+                            Icons.warning_amber_rounded,
+                            color: Color(0xFFBA1A1A),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24), // TIGHTENED
 
-                  const SizedBox(height: 40),
-                  const SizedBox(height: 24),
-                ],
+                    Center(
+                      child: Column(
+                        children: [
+                          Text(
+                            "\"All data stays on your device. Always.\"",
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontStyle: FontStyle.italic),
+                          ),
+                          const SizedBox(height: 12), // TIGHTENED
+                          Text(
+                            "THE ORGANIC JOURNAL",
+                            style: Theme.of(context).textTheme.displayMedium
+                                ?.copyWith(
+                                  fontSize: 14,
+                                  color: AppTheme.primary,
+                                  letterSpacing: -0.5,
+                                ),
+                          ),
+                          Text(
+                            "VERSION 1.0.0 (STABLE BUILD)",
+                            style: Theme.of(
+                              context,
+                            ).textTheme.labelSmall?.copyWith(fontSize: 9),
+                          ),
+                          const SizedBox(height: 20), // TIGHTENED
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
-
-      // --- BOTTOM NAVIGATION ---
+      extendBody: true,
       bottomNavigationBar: Container(
+        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
         decoration: BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.03),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
-            ),
-          ],
+          color: AppTheme.surfaceLowest,
+          borderRadius: BorderRadius.circular(32),
+          boxShadow: AppTheme.sunlightShadow,
         ),
         child: ClipRRect(
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          borderRadius: BorderRadius.circular(32),
           child: BottomNavigationBar(
-            backgroundColor: Colors.white,
-            currentIndex: 2, // ACCOUNT is selected
+            backgroundColor: AppTheme.surfaceLowest,
+            type: BottomNavigationBarType.fixed,
+            currentIndex: 3,
+            showSelectedLabels: true,
+            showUnselectedLabels: true,
+            selectedItemColor: AppTheme.secondary,
+            unselectedItemColor: AppTheme.outline,
+            selectedLabelStyle: Theme.of(context).textTheme.labelSmall
+                ?.copyWith(fontSize: 10, color: AppTheme.secondary),
+            unselectedLabelStyle: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(fontSize: 10),
+            elevation: 0,
             onTap: (index) {
               if (index == 0) {
                 Navigator.pushReplacement(
@@ -143,294 +414,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     transitionDuration: Duration.zero,
                   ),
                 );
+              } else if (index == 2) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const NewEntryScreen(),
+                  ),
+                );
               }
             },
-            selectedItemColor: accentPeach,
-            unselectedItemColor: accentGreen.withOpacity(0.5),
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            selectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-            unselectedLabelStyle: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-            ),
-            elevation: 0,
             items: const [
               BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.home_filled),
-                ),
-                label: 'Today',
+                icon: Icon(Icons.home_outlined),
+                label: 'HOME',
               ),
               BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.calendar_today_rounded),
-                ),
-                label: 'Journal',
+                icon: Icon(Icons.calendar_today_rounded),
+                label: 'HISTORY',
               ),
               BottomNavigationBarItem(
-                icon: Padding(
-                  padding: EdgeInsets.only(bottom: 4.0),
-                  child: Icon(Icons.settings_outlined),
-                ),
-                label: 'Account',
+                icon: Icon(Icons.add_circle_outline, size: 28),
+                label: 'ENTRY',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.settings),
+                label: 'SETTINGS',
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  // --- HELPER WIDGETS ---
-
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        color: accentGreen,
-        fontWeight: FontWeight.bold,
-        fontSize: 13,
-        letterSpacing: 1.2,
-      ),
-    );
-  }
-
-  Widget _buildDataCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Offline Status
-          ListTile(
-            horizontalTitleGap: 12,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
-            ),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: accentGreen.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.shield_outlined, color: accentGreen, size: 22),
-            ),
-            title: Text(
-              "Offline Mode Active",
-              style: TextStyle(fontWeight: FontWeight.bold, color: textBrown),
-            ),
-            subtitle: Text(
-              "Your data is safe and private.",
-              style: TextStyle(color: textBrown.withOpacity(0.6), fontSize: 12),
-            ),
-          ),
-          Divider(height: 1, color: bgCream, thickness: 2),
-          ListTile(
-            horizontalTitleGap: 12,
-            leading: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.blueGrey.shade50,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(Icons.ios_share, color: Colors.blueGrey.shade700),
-            ),
-            title: const Text(
-              "Export Data",
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-            ),
-            subtitle: const Text("Share or save your CSV file locally"),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () async {
-              try {
-                // Get the local CSV file path from your existing service
-                final file = await CsvService().getLocalFile();
-
-                if (await file.exists()) {
-                  // Pop open the native Android share sheet!
-                  await Share.shareXFiles([
-                    XFile(file.path),
-                  ], text: 'My Hazel Journal Backup');
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("No entries to export yet!")),
-                  );
-                }
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Error exporting data.")),
-                );
-              }
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPreferencesCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.02),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Daily Reminders
-          ListTile(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
-            ),
-            leading: Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: accentPeach.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.notifications_none,
-                color: accentPeach,
-                size: 22,
-              ),
-            ),
-            title: Text(
-              "Daily Reminders",
-              style: TextStyle(fontWeight: FontWeight.bold, color: textBrown),
-            ),
-            subtitle: Text(
-              _reminderTime.format(context),
-              style: TextStyle(color: textBrown.withOpacity(0.6), fontSize: 12),
-            ),
-            trailing: Switch(
-              value: _remindersEnabled,
-              activeColor: accentGreen,
-              activeTrackColor: accentGreen.withOpacity(0.3),
-              inactiveThumbColor: Colors.white,
-              inactiveTrackColor: bgCream,
-              onChanged: (val) async {
-                setState(() => _remindersEnabled = val);
-
-                // Save switch state to SharedPreferences
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('remindersEnabled', val);
-
-                if (val) {
-                  // Turn ON: Schedule it
-                  NotificationService().scheduleDailyReminder(_reminderTime);
-                } else {
-                  // Turn OFF: Cancel everything
-                  NotificationService().cancelAllNotifications();
-                }
-              },
-            ),
-            onTap: () async {
-              if (!_remindersEnabled)
-                return; // Don't let them change time if it's off
-
-              final TimeOfDay? pickedTime = await showTimePicker(
-                context: context,
-                initialTime: _reminderTime,
-                builder: (context, child) {
-                  return Theme(
-                    data: Theme.of(context).copyWith(
-                      colorScheme: ColorScheme.light(
-                        primary: accentGreen, // Header background color
-                        onPrimary: Colors.white, // Header text color
-                        onSurface: textBrown, // Body text color
-                      ),
-                      textButtonTheme: TextButtonThemeData(
-                        style: TextButton.styleFrom(
-                          foregroundColor: accentGreen,
-                        ), // Button colors
-                      ),
-                    ),
-                    child: child!,
-                  );
-                },
-              );
-
-              if (pickedTime != null) {
-                setState(() {
-                  _reminderTime = pickedTime;
-                });
-
-                // Save new time to SharedPreferences
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setInt('reminder_hour', pickedTime.hour);
-                await prefs.setInt('reminder_minute', pickedTime.minute);
-
-                // When they pick a new time, immediately reschedule the alarm!
-                NotificationService().scheduleDailyReminder(pickedTime);
-              }
-            },
-          ),
-          Divider(height: 1, color: bgCream, thickness: 2),
-          // Edit Profile
-          ListTile(
-            horizontalTitleGap: 12,
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 8,
-            ),
-            leading: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: const BoxDecoration(
-                color: Color(0xFFFDFCF5), // bgCream
-                shape: BoxShape.circle,
-              ),
-              child: Text(_currentAvatar, style: const TextStyle(fontSize: 22)),
-            ),
-            title: const Text(
-              "Edit Profile",
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Color(0xFF3A3A3A), // textBrown
-              ),
-            ),
-            trailing: Icon(
-              Icons.chevron_right,
-              color: const Color(0xFF3A3A3A).withOpacity(0.3),
-            ),
-            onTap: () async {
-              // Wait for the EditProfileScreen to finish...
-              final didUpdate = await Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const EditProfileScreen(),
-                ),
-              );
-
-              // If it returns true (meaning they saved), reload the avatar!
-              if (didUpdate == true) {
-                _loadAvatar();
-              }
-            },
-          ),
-        ],
       ),
     );
   }
