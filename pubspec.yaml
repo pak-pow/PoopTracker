@@ -113,5 +113,5 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon.png"
+  image_path: "assets/logo_capybara.png"
   min_sdk_android: 21 # Optional, but good practice
