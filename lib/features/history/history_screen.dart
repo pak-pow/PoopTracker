@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../../data/models/journal_entry.dart';
 import '../../data/services/csv_service.dart';
@@ -19,9 +20,12 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay = DateTime.now();
-  CalendarFormat _calendarFormat = CalendarFormat.month;
+  CalendarFormat _calendarFormat = CalendarFormat.week;
 
   List<JournalEntry> _dayEntries = [];
+  Map<String, String> _dayMeals = {};
+  int _dayTotalCalories = 0;
+  bool _showDiet = false;
   bool _isLoading = false;
 
   @override
@@ -31,10 +35,28 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _loadEntriesForDay(DateTime day) async {
+    if (!mounted) return;
     setState(() => _isLoading = true);
     final entries = await CsvService().getEntriesForDay(day);
+
+    final prefs = await SharedPreferences.getInstance();
+    String dateKey = DateFormat('yyyy-MM-dd').format(day);
+    Map<String, String> meals = {};
+    int totalCals = 0;
+
+    for (String meal in ['Breakfast', 'Lunch', 'Dinner', 'Snacks']) {
+      meals[meal] = prefs.getString('meal_${dateKey}_${meal}_desc') ?? '';
+      String calsStr = prefs.getString('meal_${dateKey}_${meal}_cals') ?? '';
+      if (calsStr.isNotEmpty) {
+        totalCals += int.tryParse(calsStr) ?? 0;
+      }
+    }
+
+    if (!mounted) return;
     setState(() {
       _dayEntries = entries;
+      _dayMeals = meals;
+      _dayTotalCalories = totalCals;
       _isLoading = false;
     });
   }
@@ -92,6 +114,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 lastDay: DateTime.utc(2030, 12, 31),
                 focusedDay: _focusedDay,
                 calendarFormat: _calendarFormat,
+                availableCalendarFormats: const {
+                  CalendarFormat.month: 'Month',
+                  CalendarFormat.week: 'Week',
+                },
                 startingDayOfWeek: StartingDayOfWeek.sunday,
                 onFormatChanged: (format) =>
                     setState(() => _calendarFormat = format),
@@ -108,7 +134,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
                 // Custom Header
                 headerStyle: HeaderStyle(
-                  formatButtonVisible: false,
+                  formatButtonVisible: true,
+                  formatButtonShowsNext: true,
+                  formatButtonDecoration: BoxDecoration(
+                    color: AppTheme.secondary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  formatButtonTextStyle: const TextStyle(
+                    color: AppTheme.secondary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                   titleCentered: false,
                   leftChevronIcon: const Icon(
                     Icons.chevron_left,
@@ -232,7 +268,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         }
 
                         final entry = _dayEntries[index - 1];
-                        return _buildEntryCard(entry);
+                        return _buildEntryCard(entry, showDiet: index == 1);
                       },
                     ),
             ),
@@ -248,7 +284,45 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildEntryCard(JournalEntry entry) {
+  Widget _buildMiniMealRow(String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.circle, size: 6, color: AppTheme.secondary),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.3),
+                children: [
+                  TextSpan(
+                    text: "$title: ",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
+                  TextSpan(
+                    text: desc,
+                    style: const TextStyle(color: AppTheme.textVariant),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEntryCard(JournalEntry entry, {bool showDiet = false}) {
     // Determine Emoji and Severity Pill based on the Type
     String emoji = "🍌";
     String severity = "NORMAL";
@@ -359,6 +433,65 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ],
             ),
+
+            // DIET SECTION
+            if (showDiet && _dayMeals.values.any((m) => m.isNotEmpty)) ...[
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: Divider(
+                  color: AppTheme.surfaceLow,
+                  thickness: 2,
+                  height: 2,
+                ),
+              ),
+              GestureDetector(
+                onTap: () => setState(() => _showDiet = !_showDiet),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "DIET LOG FOR THIS DAY",
+                      style: TextStyle(
+                        fontFamily: 'JakartaSans',
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.textVariant,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        if (_dayTotalCalories > 0)
+                          Text(
+                            "🔥 $_dayTotalCalories kcal total",
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: AppTheme.secondary,
+                                  fontSize: 10,
+                                ),
+                          ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          _showDiet ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
+                          color: AppTheme.textVariant,
+                          size: 20,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              if (_showDiet) ...[
+                const SizedBox(height: 12),
+                if (_dayMeals['Breakfast']!.isNotEmpty)
+                  _buildMiniMealRow("Breakfast", _dayMeals['Breakfast']!),
+                if (_dayMeals['Lunch']!.isNotEmpty)
+                  _buildMiniMealRow("Lunch", _dayMeals['Lunch']!),
+                if (_dayMeals['Dinner']!.isNotEmpty)
+                  _buildMiniMealRow("Dinner", _dayMeals['Dinner']!),
+                if (_dayMeals['Snacks']!.isNotEmpty)
+                  _buildMiniMealRow("Snacks", _dayMeals['Snacks']!),
+              ],
+            ],
           ],
         ),
       ),

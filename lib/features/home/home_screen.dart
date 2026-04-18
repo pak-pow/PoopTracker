@@ -34,6 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _loadNickname() async {
     final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
     setState(() {
       _nickname = prefs.getString('nickname') ?? 'Vincent';
     });
@@ -59,6 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
+    if (!mounted) return;
     setState(() {
       _streakCount = count;
       _recentEntry = recent;
