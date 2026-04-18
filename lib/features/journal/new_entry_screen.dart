@@ -76,12 +76,10 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   final Set<String> _selectedTags = {};
 
   // Text Controllers
-  final TextEditingController _caloriesController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   @override
   void dispose() {
-    _caloriesController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -426,51 +424,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       ],
                     ),
                     const SizedBox(height: 40),
-
-                    // 4. ESTIMATED CALORIES
-                    Text(
-                      "ESTIMATED CALORIES",
-                      style: Theme.of(context).textTheme.labelSmall,
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _caloriesController,
-                      keyboardType: TextInputType.number,
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleLarge?.copyWith(fontSize: 18),
-                      decoration: InputDecoration(
-                        hintText: "0",
-                        hintStyle: TextStyle(
-                          color: AppTheme.textVariant.withOpacity(0.3),
-                        ),
-                        filled: true,
-                        fillColor: AppTheme.surfaceLow,
-                        suffixIcon: Padding(
-                          padding: const EdgeInsets.only(right: 20.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "KCAL",
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(color: AppTheme.secondary),
-                              ),
-                            ],
-                          ),
-                        ),
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 20,
-                          horizontal: 24,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-
+                
                     // 5. NOTES
                     Text(
                       "NOTES",
@@ -513,7 +467,6 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                             type: _selectedType,
                             discomfort: _discomfortLevel,
                             tags: _selectedTags.toList(),
-                            calories: _caloriesController.text.trim(),
                             notes: _notesController.text.trim(),
                           );
                           await CsvService().saveEntry(newEntry);

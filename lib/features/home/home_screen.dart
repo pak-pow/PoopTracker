@@ -20,8 +20,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _streakCount = 0;
-  String _nickname = 'Hazel';
+  String _nickname = 'Vincent';
   JournalEntry? _recentEntry;
+
+  // NEW: A map to hold the meals linked to the recent entry's date
+  Map<String, String> _recentMeals = {};
 
   @override
   void initState() {
@@ -33,16 +36,31 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadNickname() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _nickname = prefs.getString('nickname') ?? 'Hazel';
+      _nickname = prefs.getString('nickname') ?? 'Vincent';
     });
   }
 
   Future<void> _loadDashboardData() async {
     final count = await CsvService().getWeeklyRhythmCount();
     final recent = await CsvService().getMostRecentEntry();
+    final prefs = await SharedPreferences.getInstance();
+
+    Map<String, String> meals = {};
+
+    // NEW: If we have a recent entry, fetch the diet logs for that exact date!
+    if (recent != null) {
+      String dateKey = DateFormat('yyyy-MM-dd').format(recent.date);
+      meals['Breakfast'] =
+          prefs.getString('meal_${dateKey}_Breakfast_desc') ?? '';
+      meals['Lunch'] = prefs.getString('meal_${dateKey}_Lunch_desc') ?? '';
+      meals['Dinner'] = prefs.getString('meal_${dateKey}_Dinner_desc') ?? '';
+      meals['Snacks'] = prefs.getString('meal_${dateKey}_Snacks_desc') ?? '';
+    }
+
     setState(() {
       _streakCount = count;
       _recentEntry = recent;
+      _recentMeals = meals;
     });
   }
 
@@ -328,11 +346,9 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       extendBody: true,
-
       bottomNavigationBar: CustomBottomNav(
-        currentIndex: 0, // 0 means Home is highlighted
-        onEntryAdded:
-            _loadDashboardData, // Automatically refreshes the streak/history when a log is added
+        currentIndex: 0,
+        onEntryAdded: _loadDashboardData,
       ),
     );
   }
@@ -370,6 +386,8 @@ class _HomeScreenState extends State<HomeScreen> {
     String timeStr = DateFormat('h:mm a').format(entry.date);
     String dateStr = DateFormat('MMM d').format(entry.date).toUpperCase();
 
+    bool hasMeals = _recentMeals.values.any((meal) => meal.isNotEmpty);
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -406,7 +424,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // The main Journal output
           Row(
             children: [
               Container(
@@ -444,70 +464,77 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
+
+          // NEW: The linked Diet Log!
+          if (hasMeals) ...[
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Divider(
+                color: AppTheme.surfaceLow,
+                thickness: 2,
+                height: 2,
+              ),
+            ),
+            Text(
+              "DIET LOG FOR THIS DAY",
+              style: TextStyle(
+                fontFamily: 'JakartaSans',
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.textVariant,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (_recentMeals['Breakfast']!.isNotEmpty)
+              _buildMiniMealRow("Breakfast", _recentMeals['Breakfast']!),
+            if (_recentMeals['Lunch']!.isNotEmpty)
+              _buildMiniMealRow("Lunch", _recentMeals['Lunch']!),
+            if (_recentMeals['Dinner']!.isNotEmpty)
+              _buildMiniMealRow("Dinner", _recentMeals['Dinner']!),
+            if (_recentMeals['Snacks']!.isNotEmpty)
+              _buildMiniMealRow("Snacks", _recentMeals['Snacks']!),
+          ],
         ],
       ),
     );
   }
 
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-    required int currentIndex,
-  }) {
-    bool isActive = index == currentIndex;
-
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        if (index == 1) {
-          Navigator.pushReplacement(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const HistoryScreen(),
-              transitionDuration: Duration.zero,
-            ),
-          );
-        } else if (index == 2) {
-          Navigator.pushReplacement(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const DietScreen(),
-              transitionDuration: Duration.zero,
-            ),
-          );
-        } else if (index == 3) {
-          Navigator.pushReplacement(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (_, __, ___) => const SettingsScreen(),
-              transitionDuration: Duration.zero,
-            ),
-          );
-        }
-      },
-      child: SizedBox(
-        width: 54,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: isActive ? 26 : 24,
-              color: isActive ? AppTheme.secondary : AppTheme.outline,
-            ),
-            if (isActive) ...[
-              const SizedBox(height: 4),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontSize: 9,
-                  color: AppTheme.secondary,
-                ),
+  // A tiny helper widget to make the linked meals look beautiful inside the card
+  Widget _buildMiniMealRow(String title, String desc) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Padding(
+            padding: EdgeInsets.only(top: 2),
+            child: Icon(Icons.circle, size: 6, color: AppTheme.secondary),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: RichText(
+              text: TextSpan(
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontSize: 13, height: 1.3),
+                children: [
+                  TextSpan(
+                    text: "$title: ",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textMain,
+                    ),
+                  ),
+                  TextSpan(
+                    text: desc,
+                    style: const TextStyle(color: AppTheme.textVariant),
+                  ),
+                ],
               ),
-            ],
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }

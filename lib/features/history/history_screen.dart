@@ -359,20 +359,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 ),
               ],
             ),
-
-            // Render tags and calories if they exist
-            if (entry.tags.isNotEmpty || entry.calories.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  if (entry.calories.isNotEmpty && entry.calories != "0")
-                    _buildSmallTag("🔥 ${entry.calories} kcal"),
-                  ...entry.tags.map((tag) => _buildSmallTag(tag)).toList(),
-                ],
-              ),
-            ],
           ],
         ),
       ),
