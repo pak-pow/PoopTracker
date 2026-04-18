@@ -305,28 +305,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(shape: BoxShape.circle),
+                        clipBehavior: Clip.hardEdge,
                         child: Image.asset(
                           'assets/logo_capybara.png',
-                          width: 40,
-                          height: 40,
                           fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(
-                          "Organic Journal",
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: AppTheme.primary,
-                                fontSize: 18,
-                                height: 1.0,
-                              ),
+                      Text(
+                        "Organic Journal",
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: AppTheme.primary,
+                          fontSize: 18,
                         ),
                       ),
                     ],

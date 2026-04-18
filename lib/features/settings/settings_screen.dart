@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_theme.dart';
 import 'edit_profile_screen.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
+import '../../data/services/csv_service.dart';
+import '../home/notifications_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({Key? key}) : super(key: key);
@@ -42,7 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               padding: const EdgeInsets.only(
                 top: 16,
                 left: 24,
-                right: 24,
+                right: 16,
                 bottom: 8,
               ),
               child: Row(
@@ -62,7 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        "The Organic Journal",
+                        "Organic Journal",
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppTheme.primary,
                           fontSize: 18,
@@ -70,13 +73,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                     ],
                   ),
-                  Icon(Icons.notifications_outlined, color: AppTheme.primary),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    color: AppTheme.primary,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
 
             Expanded(
               child: SingleChildScrollView(
+                physics: const NeverScrollableScrollPhysics(),
                 // TIGHTENED BOTTOM PADDING
                 padding: const EdgeInsets.only(
                   left: 24,
@@ -260,78 +275,134 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceLowest,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: AppTheme.outline.withOpacity(0.2),
+                    GestureDetector(
+                      onTap: () async {
+                        final csvFile = await CsvService().getLocalFile();
+                        if (await csvFile.exists()) {
+                          await Share.shareXFiles([XFile(csvFile.path)], text: 'My Organic Journal Data');
+                        } else {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('No data to export yet!')),
+                            );
+                          }
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
                         ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.file_download_outlined,
-                                color: AppTheme.textMain,
-                              ),
-                              const SizedBox(width: 16),
-                              Text(
-                                "Export CSV",
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.titleMedium?.copyWith(fontSize: 15),
-                              ),
-                            ],
+                        decoration: BoxDecoration(
+                          color: AppTheme.surfaceLowest,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: AppTheme.outline.withOpacity(0.2),
                           ),
-                          const Icon(
-                            Icons.chevron_right,
-                            color: AppTheme.outline,
-                          ),
-                        ],
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.file_download_outlined,
+                                  color: AppTheme.textMain,
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  "Export CSV",
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium?.copyWith(fontSize: 15),
+                                ),
+                              ],
+                            ),
+                            const Icon(
+                              Icons.chevron_right,
+                              color: AppTheme.outline,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFDAD6).withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.delete_outline,
-                                color: Color(0xFFBA1A1A),
+                    GestureDetector(
+                      onTap: () async {
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Delete All Data?'),
+                            content: const Text('This will permanently delete all your journal entries and diet logs. Your profile will remain. This action cannot be undone.'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancel'),
                               ),
-                              const SizedBox(width: 16),
-                              Text(
-                                "Delete All Data",
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      fontSize: 15,
-                                      color: const Color(0xFFBA1A1A),
-                                    ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Delete', style: TextStyle(color: Colors.red)),
                               ),
                             ],
                           ),
-                          const Icon(
-                            Icons.warning_amber_rounded,
-                            color: Color(0xFFBA1A1A),
-                          ),
-                        ],
+                        );
+
+                        if (confirm == true) {
+                          final csvFile = await CsvService().getLocalFile();
+                          if (await csvFile.exists()) {
+                            await csvFile.delete();
+                          }
+                          
+                          final prefs = await SharedPreferences.getInstance();
+                          final keys = prefs.getKeys();
+                          for (String key in keys) {
+                            if (key.startsWith('meal_')) {
+                              await prefs.remove(key);
+                            }
+                          }
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('All journal and diet data deleted.')),
+                            );
+                          }
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFDAD6).withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.delete_outline,
+                                  color: Color(0xFFBA1A1A),
+                                ),
+                                const SizedBox(width: 16),
+                                Text(
+                                  "Delete All Data",
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontSize: 15,
+                                        color: const Color(0xFFBA1A1A),
+                                      ),
+                                ),
+                              ],
+                            ),
+                            const Icon(
+                              Icons.warning_amber_rounded,
+                              color: Color(0xFFBA1A1A),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 24), // TIGHTENED

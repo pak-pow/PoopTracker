@@ -6,6 +6,7 @@ import '../../core/theme/app_theme.dart';
 import '../../data/models/journal_entry.dart';
 import '../../data/services/csv_service.dart';
 import '../home/home_screen.dart';
+import '../home/notifications_screen.dart';
 import '../journal/new_entry_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
@@ -73,7 +74,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               padding: const EdgeInsets.only(
                 top: 16,
                 left: 24,
-                right: 24,
+                right: 16,
                 bottom: 8,
               ),
               child: Row(
@@ -93,7 +94,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        "The Organic Journal",
+                        "Organic Journal",
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
                           color: AppTheme.primary,
                           fontSize: 18,
@@ -101,7 +102,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ],
                   ),
-                  Icon(Icons.notifications_outlined, color: AppTheme.primary),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    color: AppTheme.primary,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
