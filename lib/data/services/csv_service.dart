@@ -115,4 +115,26 @@ class CsvService {
     );
     await file.writeAsString(newCsvContent);
   }
+
+  Future<JournalEntry?> getMostRecentEntry() async {
+    final file = await getLocalFile();
+    if (!(await file.exists())) return null;
+
+    final String fileContent = await file.readAsString();
+    final List<List<dynamic>> csvData = const CsvToListConverter().convert(
+      fileContent,
+    );
+
+    // Read from the bottom up to find the newest row
+    for (int i = csvData.length - 1; i >= 0; i--) {
+      if (csvData[i].isNotEmpty) {
+        try {
+          return JournalEntry.fromCsvRow(csvData[i]);
+        } catch (e) {
+          continue; // Skip any corrupted rows
+        }
+      }
+    }
+    return null; // Return null if no valid entries exist
+  }
 }

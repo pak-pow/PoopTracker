@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
+import '../../data/models/journal_entry.dart';
 import '../../data/services/csv_service.dart';
 import '../journal/new_entry_screen.dart';
 import '../history/history_screen.dart';
@@ -16,12 +18,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _weeklyRhythm = 0;
   String _nickname = 'Hazel';
+  JournalEntry? _recentEntry; // NEW: State variable for our dynamic entry!
 
   @override
   void initState() {
     super.initState();
     _loadNickname();
-    _loadRhythm();
+    _loadDashboardData(); // NEW: Loads rhythm AND recent entry
   }
 
   Future<void> _loadNickname() async {
@@ -31,10 +34,12 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  Future<void> _loadRhythm() async {
+  Future<void> _loadDashboardData() async {
     final count = await CsvService().getWeeklyRhythmCount();
+    final recent = await CsvService().getMostRecentEntry();
     setState(() {
       _weeklyRhythm = count;
+      _recentEntry = recent;
     });
   }
 
@@ -51,11 +56,10 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: AppTheme.background,
       body: Stack(
         children: [
-          // --- MAIN SCROLLABLE CONTENT ---
           SafeArea(
             child: SingleChildScrollView(
               padding: const EdgeInsets.only(
-                top: 80,
+                top: 120,
                 left: 24,
                 right: 24,
                 bottom: 120,
@@ -63,7 +67,6 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // --- GREETING ---
                   Text(
                     "$_greeting, $_nickname! 👋",
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
@@ -80,7 +83,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 32),
 
-                  // --- WEEKLY RHYTHM CARD ---
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(24),
@@ -111,7 +113,6 @@ class _HomeScreenState extends State<HomeScreen> {
                               .asMap()
                               .entries
                               .map((entry) {
-                                // Simple logic to highlight days based on rhythm count (just for visual mockup)
                                 bool isActive = entry.key < _weeklyRhythm;
                                 return Container(
                                   width: 36,
@@ -145,7 +146,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // --- LOG TODAY BUTTON ---
                   SizedBox(
                     width: double.infinity,
                     height: 64,
@@ -157,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             builder: (context) => const NewEntryScreen(),
                           ),
                         );
-                        _loadRhythm();
+                        _loadDashboardData(); // Refresh the card when coming back!
                       },
                       icon: const Icon(Icons.add_circle, size: 24),
                       label: const Text(
@@ -179,7 +179,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 40),
 
-                  // --- RECENT ENTRY PREVIEW ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -190,94 +189,61 @@ class _HomeScreenState extends State<HomeScreen> {
                           context,
                         ).textTheme.titleLarge?.copyWith(fontSize: 18),
                       ),
-                      Text(
-                        "VIEW HISTORY",
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: AppTheme.secondary,
+                      GestureDetector(
+                        onTap: () => Navigator.pushReplacement(
+                          context,
+                          PageRouteBuilder(
+                            pageBuilder: (_, __, ___) => const HistoryScreen(),
+                            transitionDuration: Duration.zero,
+                          ),
+                        ),
+                        child: Text(
+                          "VIEW HISTORY",
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(color: AppTheme.secondary),
                         ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceLowest,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: AppTheme.sunlightShadow,
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "YESTERDAY, 8:45 PM",
-                              style: Theme.of(context).textTheme.labelSmall,
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
+
+                  // --- DYNAMIC RECENT ENTRY RENDERING ---
+                  _recentEntry == null
+                      ? Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surfaceLowest,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: AppTheme.sunlightShadow,
+                          ),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.spa_outlined,
+                                color: AppTheme.textVariant.withOpacity(0.3),
+                                size: 32,
                               ),
-                              decoration: BoxDecoration(
-                                color: AppTheme.primaryContainer.withOpacity(
-                                  0.2,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
+                              const SizedBox(height: 12),
+                              Text(
+                                "No logs yet. You're doing great!",
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
-                              child: Text(
-                                "LOGGED",
-                                style: Theme.of(context).textTheme.labelSmall
-                                    ?.copyWith(
-                                      color: AppTheme.primary,
-                                      fontSize: 9,
-                                    ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            const Text(
-                              "🌿",
-                              style: TextStyle(fontSize: 32),
-                            ), // Placeholder icon
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Great Day",
-                                  style: Theme.of(context).textTheme.titleMedium
-                                      ?.copyWith(fontSize: 16),
-                                ),
-                                Text(
-                                  "Feeling healthy and light",
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(fontSize: 13),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                            ],
+                          ),
+                        )
+                      : _buildRecentEntryCard(_recentEntry!),
                 ],
               ),
             ),
           ),
 
-          // --- TOP APP BAR (FROSTED GLASS) ---
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: Container(
-              height: 100, // Covers status bar + app bar
+              height: 100,
               padding: const EdgeInsets.only(top: 40, left: 24, right: 24),
               decoration: BoxDecoration(
                 color: AppTheme.background.withOpacity(0.9),
@@ -287,7 +253,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Row(
                     children: [
-                      // --- NEW CAPYBARA LOGO ---
                       Container(
                         width: 40,
                         height: 40,
@@ -315,9 +280,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-
-      // --- NEW 4-BUTTON BOTTOM NAVIGATION ---
-      extendBody: true, // Allows content to scroll behind the floating nav
+      extendBody: true,
       bottomNavigationBar: Container(
         margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
         decoration: BoxDecoration(
@@ -356,7 +319,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(
                     builder: (context) => const NewEntryScreen(),
                   ),
-                );
+                ).then((_) => _loadDashboardData());
               } else if (index == 3) {
                 Navigator.pushReplacement(
                   context,
@@ -387,6 +350,119 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // Helper widget to render the dynamic data beautifully
+  Widget _buildRecentEntryCard(JournalEntry entry) {
+    String emoji = "🍌";
+    String severity = "LOGGED";
+    Color severityColor = AppTheme.primary;
+    Color severityBg = AppTheme.primaryContainer.withOpacity(0.2);
+
+    if (entry.type.contains("Type 1") ||
+        entry.type.contains("Type 2") ||
+        entry.type.contains("Type 3")) {
+      emoji = entry.type.contains("Type 1")
+          ? "🪨"
+          : (entry.type.contains("Type 2") ? "🥜" : "🪵");
+      if (entry.discomfort > 3) {
+        severity = "MILD PAIN";
+        severityColor = AppTheme.secondary;
+        severityBg = AppTheme.secondaryContainer.withOpacity(0.2);
+      }
+    } else if (entry.type.contains("Type 5") ||
+        entry.type.contains("Type 6") ||
+        entry.type.contains("Type 7")) {
+      emoji = entry.type.contains("Type 5")
+          ? "☁️"
+          : (entry.type.contains("Type 6") ? "💧" : "🌊");
+      if (entry.discomfort > 3) {
+        severity = "DISCOMFORT";
+        severityColor = AppTheme.secondary;
+        severityBg = AppTheme.secondaryContainer.withOpacity(0.2);
+      }
+    }
+
+    String timeStr = DateFormat('h:mm a').format(entry.date);
+    String dateStr = DateFormat('MMM d').format(entry.date).toUpperCase();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceLowest,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: AppTheme.sunlightShadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "$dateStr, $timeStr",
+                style: Theme.of(context).textTheme.labelSmall,
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: severityBg,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  severity,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: severityColor,
+                    fontSize: 9,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Container(
+                width: 54,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceLow,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                alignment: Alignment.center,
+                child: Text(emoji, style: const TextStyle(fontSize: 28)),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      entry.type,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(fontSize: 16),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      entry.notes.isNotEmpty ? entry.notes : "No notes added.",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(fontSize: 13),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
