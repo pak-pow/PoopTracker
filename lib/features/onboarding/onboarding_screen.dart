@@ -27,6 +27,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     minute: 30,
   ); // Defaults to 8:30 PM
 
+  @override
+  void dispose() {
+    _pageController.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
   Future<void> _completeOnboarding() async {
     if (_nameController.text.trim().isEmpty) {
       _pageController.animateToPage(

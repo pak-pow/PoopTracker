@@ -38,38 +38,6 @@ class NotificationsScreen extends StatelessWidget {
               ),
             ),
 
-            // --- NEW: TEST BUTTON ---
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-              child: SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    await NotificationService().sendTestNotification();
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Test notification fired! Check your system tray.')),
-                      );
-                    }
-                  },
-                  icon: const Icon(Icons.send_rounded),
-                  label: const Text(
-                    "Send Immediate Test Notification",
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.surfaceLowest,
-                    foregroundColor: AppTheme.secondary,
-                    elevation: 0,
-                    side: const BorderSide(color: AppTheme.secondary),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-
             // --- LIST STATE ---
             Expanded(
               child: FutureBuilder<List<dynamic>>(

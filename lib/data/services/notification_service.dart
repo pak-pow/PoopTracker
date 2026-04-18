@@ -65,6 +65,7 @@ class NotificationService {
           channelDescription: 'Reminds you to log your daily entry',
           importance: Importance.max,
           priority: Priority.high,
+          color: Color(0xFFFAFAF3),
         );
 
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
@@ -97,6 +98,7 @@ class NotificationService {
           channelDescription: 'Used for testing if notifications work',
           importance: Importance.max,
           priority: Priority.high,
+          color: Color(0xFFFAFAF3),
         );
 
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
