@@ -77,7 +77,7 @@ class NotificationService {
       'Take a moment to log your rhythm for today.',
       scheduledDate,
       platformChannelSpecifics,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
@@ -86,5 +86,32 @@ class NotificationService {
 
   Future<void> cancelAllNotifications() async {
     await flutterLocalNotificationsPlugin.cancelAll();
+  }
+
+  // --- NEW: Test & Debug Commands ---
+  Future<void> sendTestNotification() async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'test_channel',
+          'Test Notifications',
+          channelDescription: 'Used for testing if notifications work',
+          importance: Importance.max,
+          priority: Priority.high,
+        );
+
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+
+    await flutterLocalNotificationsPlugin.show(
+      99,
+      'Test Notification 🚀',
+      'It works! Your device is successfully receiving local notifications.',
+      platformChannelSpecifics,
+    );
+  }
+
+  Future<List<PendingNotificationRequest>> getPendingNotifications() async {
+    return await flutterLocalNotificationsPlugin.pendingNotificationRequests();
   }
 }

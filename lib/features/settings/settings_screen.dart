@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../core/theme/app_theme.dart';
 import 'edit_profile_screen.dart';
 import '../../core/widgets/custom_bottom_nav.dart';
 import '../../data/services/csv_service.dart';
+import '../../data/services/notification_service.dart';
 import '../home/notifications_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -15,9 +17,11 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _nickname = 'Hazel';
+  String _nickname = 'User';
   String _avatar = '🌿';
   bool _remindersEnabled = true;
+  int _reminderHour = 20;
+  int _reminderMinute = 30;
 
   @override
   void initState() {
@@ -28,10 +32,60 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _nickname = prefs.getString('nickname') ?? 'Hazel';
+      _nickname = prefs.getString('nickname') ?? 'User';
       _avatar = prefs.getString('avatar') ?? '🌿';
       _remindersEnabled = prefs.getBool('remindersEnabled') ?? true;
+      _reminderHour = prefs.getInt('reminderHour') ?? 20;
+      _reminderMinute = prefs.getInt('reminderMinute') ?? 30;
     });
+  }
+
+  String _getFormattedTime() {
+    final now = DateTime.now();
+    final dt = DateTime(now.year, now.month, now.day, _reminderHour, _reminderMinute);
+    return DateFormat('h:mm a').format(dt);
+  }
+
+  Future<void> _pickTime() async {
+    final newTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay(hour: _reminderHour, minute: _reminderMinute),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.light().copyWith(
+            colorScheme: const ColorScheme.light(
+              primary: AppTheme.primary,
+              onPrimary: Colors.white,
+              surface: AppTheme.surfaceLowest,
+              onSurface: AppTheme.textMain,
+            ),
+          ),
+          child: child!,
+        );
+      },
+    );
+
+    if (newTime != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('reminderHour', newTime.hour);
+      await prefs.setInt('reminderMinute', newTime.minute);
+
+      setState(() {
+        _reminderHour = newTime.hour;
+        _reminderMinute = newTime.minute;
+      });
+
+      if (_remindersEnabled) {
+        await NotificationService().scheduleDailyReminder(
+          TimeOfDay(hour: _reminderHour, minute: _reminderMinute),
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Reminder updated to ${_getFormattedTime()}')),
+          );
+        }
+      }
+    }
   }
 
   @override
@@ -231,12 +285,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         .titleMedium
                                         ?.copyWith(fontSize: 15),
                                   ),
-                                  Text(
-                                    "8:30 PM",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontSize: 12),
+                                  GestureDetector(
+                                    onTap: _pickTime,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.surfaceLowest,
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(color: AppTheme.outline.withOpacity(0.3)),
+                                      ),
+                                      child: Text(
+                                        _getFormattedTime(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                              fontSize: 12, 
+                                              color: AppTheme.primary,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
@@ -253,6 +322,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   await SharedPreferences.getInstance();
                               await prefs.setBool('remindersEnabled', val);
                               setState(() => _remindersEnabled = val);
+                              
+                              if (val) {
+                                await NotificationService().scheduleDailyReminder(
+                                  TimeOfDay(hour: _reminderHour, minute: _reminderMinute),
+                                );
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Daily reminder scheduled for ${_getFormattedTime()}!')),
+                                  );
+                                }
+                              } else {
+                                await NotificationService().cancelAllNotifications();
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Reminders disabled.')),
+                                  );
+                                }
+                              }
                             },
                           ),
                         ],
@@ -426,7 +513,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 ),
                           ),
                           Text(
-                            "VERSION 1.0.0 (STABLE BUILD)",
+                            "VERSION 1.0.0",
                             style: Theme.of(
                               context,
                             ).textTheme.labelSmall?.copyWith(fontSize: 9),

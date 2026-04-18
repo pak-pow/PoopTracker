@@ -13,6 +13,18 @@ void main() async {
   await NotificationService().init();
   
   final prefs = await SharedPreferences.getInstance();
+  
+  final remindersEnabled = prefs.getBool('remindersEnabled') ?? true;
+  if (remindersEnabled) {
+    final hour = prefs.getInt('reminderHour') ?? 20;
+    final min = prefs.getInt('reminderMinute') ?? 30;
+    await NotificationService().scheduleDailyReminder(
+      TimeOfDay(hour: hour, minute: min),
+    );
+  } else {
+    await NotificationService().cancelAllNotifications();
+  }
+
   final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
   runApp(HazelJournalApp(isFirstLaunch: isFirstLaunch));
 }
