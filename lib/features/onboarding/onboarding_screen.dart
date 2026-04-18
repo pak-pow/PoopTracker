@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/theme/app_theme.dart';
 import '../home/home_screen.dart';
@@ -21,6 +22,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   // Reminder State
   bool _remindersEnabled = true;
+  TimeOfDay _reminderTime = const TimeOfDay(
+    hour: 20,
+    minute: 30,
+  ); // Defaults to 8:30 PM
 
   Future<void> _completeOnboarding() async {
     if (_nameController.text.trim().isEmpty) {
@@ -43,6 +48,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     await prefs.setString('nickname', _nameController.text.trim());
     await prefs.setString('avatar', _selectedAvatar);
     await prefs.setBool('remindersEnabled', _remindersEnabled);
+    await prefs.setInt('reminderHour', _reminderTime.hour);
+    await prefs.setInt('reminderMinute', _reminderTime.minute);
 
     if (!mounted) return;
     Navigator.pushReplacement(
@@ -64,7 +71,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.only(top: 24, left: 32, right: 32),
                 child: Row(
                   children: List.generate(3, (index) {
-                    // Changed to 3 dots for the 3 setup steps
                     bool isActive = index == _currentPage;
                     return Expanded(
                       child: AnimatedContainer(
@@ -128,9 +134,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           Text(
                             _currentPage == 0
                                 ? "Get Started"
-                                : (_currentPage == 3
-                                      ? "Start Tracking"
-                                      : "Continue"),
+                                : (_currentPage == 2
+                                      ? "Save My Ritual"
+                                      : (_currentPage == 3
+                                            ? "Start Tracking"
+                                            : "Continue")),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 18,
@@ -182,7 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
           const SizedBox(height: 48),
           Text(
-            "Organic Journal",
+            "The Organic Journal",
             style: Theme.of(
               context,
             ).textTheme.displayMedium?.copyWith(fontSize: 32),
@@ -202,29 +210,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildProfilePage() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(40.0),
+      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 48.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 48.0), // Increased from 40
-            child: Text(
-              "Let's make it personal.",
-              style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                fontSize: 28,
-                color: AppTheme.primary,
-              ),
+          Text(
+            "Let's make it personal.",
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.displayMedium?.copyWith(
+              fontSize: 28,
+              color: AppTheme.primary,
             ),
           ),
           const SizedBox(height: 12),
           Text(
             "Choose a name and a friendly avatar for your private journal.",
+            textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 40),
-          Text(
-            "WHAT SHOULD WE CALL YOU?",
-            style: Theme.of(context).textTheme.labelSmall,
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "WHAT SHOULD WE CALL YOU?",
+              style: TextStyle(
+                fontFamily: 'JakartaSans',
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: AppTheme.textVariant,
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           TextField(
@@ -241,14 +257,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
           const SizedBox(height: 40),
-          Text(
-            "CHOOSE YOUR AVATAR",
-            style: Theme.of(context).textTheme.labelSmall,
+          const Align(
+            alignment: Alignment.centerLeft,
+            child: Text(
+              "CHOOSE YOUR AVATAR",
+              style: TextStyle(
+                fontFamily: 'JakartaSans',
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                color: AppTheme.textVariant,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
           Wrap(
-            spacing: 16,
-            runSpacing: 16,
+            alignment: WrapAlignment.center,
+            spacing: 12,
+            runSpacing: 12,
             children: _avatars.map((emoji) {
               final isSelected = emoji == _selectedAvatar;
               return GestureDetector(
@@ -266,7 +292,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           : Colors.transparent,
                       width: 2,
                     ),
-                    boxShadow: AppTheme.sunlightShadow,
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: AppTheme.primary.withOpacity(0.1),
+                              blurRadius: 10,
+                            ),
+                          ]
+                        : AppTheme.sunlightShadow,
                   ),
                   alignment: Alignment.center,
                   child: Text(emoji, style: const TextStyle(fontSize: 28)),
@@ -281,24 +314,36 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildReminderPage() {
     return Padding(
-      padding: const EdgeInsets.all(40.0),
+      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 16.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            "Cultivate a Daily Ritual",
-            style: Theme.of(
-              context,
-            ).textTheme.displayMedium?.copyWith(fontSize: 28),
+          RichText(
+            text: TextSpan(
+              style: Theme.of(
+                context,
+              ).textTheme.displayMedium?.copyWith(fontSize: 36, height: 1.1),
+              children: [
+                const TextSpan(text: "Cultivate a\n"),
+                TextSpan(
+                  text: "Daily Ritual",
+                  style: TextStyle(color: AppTheme.primary),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           Text(
             "Consistency is the key to understanding your inner health journey.",
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.4),
           ),
-          const SizedBox(height: 48),
+
+          const Spacer(flex: 2),
+
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: AppTheme.surfaceLow,
               borderRadius: BorderRadius.circular(24),
@@ -306,51 +351,96 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "Set a daily reminder?",
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Set a daily reminder?",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                    Text(
-                      "Gently nudge your routine",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textVariant,
+                      SizedBox(height: 2),
+                      Text(
+                        "Gently nudge your routine",
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textVariant,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 Switch(
                   value: _remindersEnabled,
-                  activeColor: AppTheme.primary,
+                  activeColor: AppTheme.surfaceLowest,
+                  activeTrackColor: AppTheme.primary,
+                  inactiveThumbColor: AppTheme.outline,
+                  inactiveTrackColor: AppTheme.surfaceLowest,
                   onChanged: (val) => setState(() => _remindersEnabled = val),
                 ),
               ],
             ),
           ),
-          const Spacer(),
-          Center(
-            child: Column(
-              children: [
-                const Icon(
-                  Icons.notifications_active_outlined,
-                  size: 48,
-                  color: AppTheme.primaryContainer,
+
+          const Spacer(flex: 2),
+
+          AnimatedOpacity(
+            opacity: _remindersEnabled ? 1.0 : 0.3,
+            duration: const Duration(milliseconds: 300),
+            child: IgnorePointer(
+              ignoring: !_remindersEnabled,
+              child: SizedBox(
+                height: 160,
+                child: CupertinoTheme(
+                  data: CupertinoThemeData(
+                    textTheme: CupertinoTextThemeData(
+                      dateTimePickerTextStyle: Theme.of(context)
+                          .textTheme
+                          .displayMedium!
+                          .copyWith(fontSize: 28, color: AppTheme.textMain),
+                    ),
+                  ),
+                  child: CupertinoDatePicker(
+                    mode: CupertinoDatePickerMode.time,
+                    initialDateTime: DateTime(
+                      2020,
+                      1,
+                      1,
+                      _reminderTime.hour,
+                      _reminderTime.minute,
+                    ),
+                    onDateTimeChanged: (DateTime newDateTime) {
+                      setState(() {
+                        _reminderTime = TimeOfDay.fromDateTime(newDateTime);
+                      });
+                    },
+                  ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  "Defaulting to 8:30 PM",
-                  style: Theme.of(context).textTheme.labelSmall,
-                ),
-              ],
+              ),
             ),
           ),
-          const Spacer(),
+
+          const Spacer(flex: 2),
+
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: AppTheme.secondary.withOpacity(0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.notifications_active_rounded,
+                size: 32,
+                color: AppTheme.secondary,
+              ),
+            ),
+          ),
+
+          const Spacer(flex: 1),
         ],
       ),
     );

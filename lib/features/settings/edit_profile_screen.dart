@@ -60,7 +60,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 left: 16,
                 right: 24,
                 bottom: 8,
-              ), // TIGHTENED
+              ),
               child: Row(
                 children: [
                   IconButton(
@@ -74,12 +74,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.only(
-                  left: 32,
-                  right: 32,
-                  bottom: 20,
-                ), // TIGHTENED
+                padding: const EdgeInsets.only(left: 32, right: 32, bottom: 20),
                 child: Column(
+                  // We change this to CrossAxisAlignment.center to align everything!
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
@@ -88,71 +85,88 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         context,
                       ).textTheme.displayMedium?.copyWith(fontSize: 32),
                     ),
-                    const SizedBox(height: 4), // TIGHTENED
+                    const SizedBox(height: 4),
                     Text(
                       "Choose how you're seen in your journal",
+                      textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    const SizedBox(height: 24), // TIGHTENED
-
-                    Stack(
-                      alignment: Alignment.bottomRight,
-                      children: [
-                        Container(
-                          width: 100, // SHRUNK AVATAR
-                          height: 100, // SHRUNK AVATAR
-                          decoration: const BoxDecoration(
-                            color: AppTheme.surfaceLowest,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Color(0x0A000000),
-                                blurRadius: 20,
-                                offset: Offset(0, 10),
+                    const SizedBox(height: 32), // Added some breathing room
+                    // --- CENTERED AVATAR PREVIEW ---
+                    Center(
+                      // Explicitly centered
+                      child: Stack(
+                        alignment: Alignment.bottomRight,
+                        children: [
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              color: AppTheme.surfaceLowest,
+                              shape: BoxShape.circle,
+                              // Added the Terracotta border from the mockup!
+                              border: Border.all(
+                                color: AppTheme.secondary,
+                                width: 3,
                               ),
-                            ],
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            _selectedAvatar,
-                            style: const TextStyle(fontSize: 50),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: AppTheme.secondary,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: AppTheme.background,
-                              width: 4,
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x0A000000),
+                                  blurRadius: 20,
+                                  offset: Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              _selectedAvatar,
+                              style: const TextStyle(fontSize: 50),
                             ),
                           ),
-                          child: const Icon(
-                            Icons.edit,
-                            color: AppTheme.surfaceLowest,
-                            size: 14,
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppTheme
+                                  .primary, // Using Sage Green for the Edit icon
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: AppTheme.background,
+                                width: 4,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.edit,
+                              color: AppTheme.surfaceLowest,
+                              size: 14,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 12), // TIGHTENED
+                    const SizedBox(height: 12),
                     Text(
                       "TAP TO CHANGE EMOJI",
                       style: Theme.of(
                         context,
                       ).textTheme.labelSmall?.copyWith(fontSize: 10),
                     ),
-                    const SizedBox(height: 24), // TIGHTENED
+                    const SizedBox(height: 32),
 
-                    Align(
+                    // --- NICKNAME INPUT ---
+                    const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "NICKNAME",
-                        style: Theme.of(context).textTheme.labelSmall,
+                        style: TextStyle(
+                          fontFamily: 'JakartaSans',
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: AppTheme.textVariant,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8), // TIGHTENED
+                    const SizedBox(height: 8),
                     TextField(
                       controller: _nameController,
                       style: Theme.of(
@@ -164,45 +178,62 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 16,
                           horizontal: 24,
-                        ), // TIGHTENED
+                        ),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24), // TIGHTENED
+                    const SizedBox(height: 24),
 
-                    Align(
+                    // --- QUICK PICKERS ---
+                    const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         "QUICK PICKERS",
-                        style: Theme.of(context).textTheme.labelSmall,
+                        style: TextStyle(
+                          fontFamily: 'JakartaSans',
+                          letterSpacing: 1.2,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 11,
+                          color: AppTheme.textVariant,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 12), // TIGHTENED
+                    const SizedBox(height: 12),
                     Wrap(
                       alignment: WrapAlignment.center,
-                      spacing: 12, // TIGHTENED
-                      runSpacing: 12, // TIGHTENED
+                      spacing: 12,
+                      runSpacing: 12,
                       children: _avatars.map((emoji) {
                         final isSelected = emoji == _selectedAvatar;
                         return GestureDetector(
                           onTap: () => setState(() => _selectedAvatar = emoji),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
-                            width: 60, // SHRUNK PICKER
-                            height: 60, // SHRUNK PICKER
+                            width: 60,
+                            height: 60,
                             decoration: BoxDecoration(
                               color: AppTheme.surfaceLowest,
                               borderRadius: BorderRadius.circular(16),
+                              // Smooth selection highlight
                               border: Border.all(
                                 color: isSelected
                                     ? AppTheme.primaryContainer
                                     : Colors.transparent,
                                 width: 2,
                               ),
-                              boxShadow: AppTheme.sunlightShadow,
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: AppTheme.primary.withOpacity(
+                                          0.1,
+                                        ),
+                                        blurRadius: 10,
+                                      ),
+                                    ]
+                                  : AppTheme.sunlightShadow,
                             ),
                             alignment: Alignment.center,
                             child: Text(
@@ -213,11 +244,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         );
                       }).toList(),
                     ),
-                    const SizedBox(height: 32), // TIGHTENED
+                    const SizedBox(height: 32),
 
+                    // --- BUTTONS ---
                     SizedBox(
                       width: double.infinity,
-                      height: 56, // TIGHTENED
+                      height: 56,
                       child: ElevatedButton(
                         onPressed: _saveProfile,
                         style: ElevatedButton.styleFrom(
@@ -232,7 +264,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           children: [
                             Text(
                               "Save Changes",
-                              style: TextStyle(
+                              style: TextStyle( 
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
                               ),
@@ -243,7 +275,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: 8), // TIGHTENED
+                    const SizedBox(height: 8),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
                       child: Text(
