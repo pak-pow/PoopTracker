@@ -7,6 +7,8 @@ import '../../data/services/csv_service.dart';
 import '../journal/new_entry_screen.dart';
 import '../history/history_screen.dart';
 import '../settings/settings_screen.dart';
+import '../diet/diet_screen.dart';
+import 'notifications_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -16,8 +18,8 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _weeklyRhythm = 0;
-  String _nickname = 'user';
+  int _streakCount = 0;
+  String _nickname = 'Hazel';
   JournalEntry? _recentEntry;
 
   @override
@@ -30,7 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadNickname() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _nickname = prefs.getString('nickname') ?? 'user';
+      _nickname = prefs.getString('nickname') ?? 'Hazel';
     });
   }
 
@@ -38,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final count = await CsvService().getWeeklyRhythmCount();
     final recent = await CsvService().getMostRecentEntry();
     setState(() {
-      _weeklyRhythm = count;
+      _streakCount = count;
       _recentEntry = recent;
     });
   }
@@ -58,12 +60,11 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           SafeArea(
             child: SingleChildScrollView(
-              // TIGHTENED PADDING
               padding: const EdgeInsets.only(
-                top: 100,
+                top: 104,
                 left: 24,
                 right: 24,
-                bottom: 90,
+                bottom: 120,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,11 +83,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                     ).textTheme.bodyMedium?.copyWith(fontSize: 15),
                   ),
-                  const SizedBox(height: 20), // TIGHTENED
+                  const SizedBox(height: 24),
 
+                  // --- HYBRID STREAK & WEEKLY RHYTHM CARD ---
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(20), // TIGHTENED
+                    padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       color: AppTheme.surfaceLow,
                       borderRadius: BorderRadius.circular(24),
@@ -94,27 +96,54 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Column(
                       children: [
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(
-                              "THIS WEEK'S RHYTHM",
-                              style: Theme.of(context).textTheme.labelSmall,
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: AppTheme.secondary.withOpacity(0.15),
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: const Text(
+                                "🔥",
+                                style: TextStyle(fontSize: 28),
+                              ),
                             ),
-                            Text(
-                              "$_weeklyRhythm/7 Days",
-                              style: Theme.of(context).textTheme.labelSmall
-                                  ?.copyWith(color: AppTheme.secondary),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "CURRENT STREAK",
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  "$_streakCount Days",
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .displayMedium
+                                      ?.copyWith(
+                                        color: AppTheme.secondary,
+                                        fontSize: 24,
+                                      ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 20),
+
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: ['M', 'T', 'W', 'T', 'F', 'S', 'S']
                               .asMap()
                               .entries
                               .map((entry) {
-                                bool isActive = entry.key < _weeklyRhythm;
+                                bool isActive =
+                                    entry.key <
+                                    (_streakCount > 7 ? 7 : _streakCount);
                                 return Container(
                                   width: 36,
                                   height: 36,
@@ -145,11 +174,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16), // TIGHTENED
+                  const SizedBox(height: 16),
 
                   SizedBox(
                     width: double.infinity,
-                    height: 56, // TIGHTENED
+                    height: 56,
                     child: ElevatedButton.icon(
                       onPressed: () async {
                         await Navigator.push(
@@ -173,12 +202,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(20),
                         ),
-                        shadowColor: AppTheme.secondary.withOpacity(0.4),
                         elevation: 8,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24), // TIGHTENED
+                  const SizedBox(height: 24),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -238,114 +266,151 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
+          // --- FIXED TOP BAR ---
           Positioned(
             top: 0,
             left: 0,
             right: 0,
             child: Container(
               height: 100,
-              padding: const EdgeInsets.only(top: 40, left: 24, right: 24),
+              padding: const EdgeInsets.only(top: 40, left: 24, right: 16),
               decoration: BoxDecoration(
-                color: AppTheme.background.withOpacity(0.9),
+                color: AppTheme.background.withOpacity(0.95),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: const BoxDecoration(shape: BoxShape.circle),
-                        clipBehavior: Clip.hardEdge,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
                         child: Image.asset(
                           'assets/logo_capybara.png',
+                          width: 40,
+                          height: 40,
                           fit: BoxFit.cover,
                         ),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        "The Organic Journal",
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: AppTheme.primary,
-                          fontSize: 18,
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          "Organic Journal",
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: AppTheme.primary,
+                                fontSize: 18,
+                                height: 1.0,
+                              ),
                         ),
                       ),
                     ],
                   ),
-                  Icon(Icons.notifications_outlined, color: AppTheme.primary),
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    color: AppTheme.primary,
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NotificationsScreen(),
+                        ),
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
           ),
         ],
       ),
+
       extendBody: true,
-      bottomNavigationBar: Container(
-        margin: const EdgeInsets.only(left: 16, right: 16, bottom: 24),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceLowest,
-          borderRadius: BorderRadius.circular(32),
-          boxShadow: AppTheme.sunlightShadow,
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
-          child: BottomNavigationBar(
-            backgroundColor: AppTheme.surfaceLowest,
-            type: BottomNavigationBarType.fixed,
-            currentIndex: 0,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            selectedItemColor: AppTheme.secondary,
-            unselectedItemColor: AppTheme.outline,
-            selectedLabelStyle: Theme.of(context).textTheme.labelSmall
-                ?.copyWith(fontSize: 10, color: AppTheme.secondary),
-            unselectedLabelStyle: Theme.of(
-              context,
-            ).textTheme.labelSmall?.copyWith(fontSize: 10),
-            elevation: 0,
-            onTap: (index) {
-              if (index == 1) {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const HistoryScreen(),
-                    transitionDuration: Duration.zero,
+
+      // --- HYBRID FLOATING PILL + OVERLAPPING BUTTON ---
+      bottomNavigationBar: SafeArea(
+        child: Container(
+          height: 100, // Total height to accommodate the popping out button
+          margin: const EdgeInsets.only(left: 20, right: 20, bottom: 20),
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            clipBehavior:
+                Clip.none, // Allows the button to break out of bounds safely
+            children: [
+              // 1. THE FLOATING WHITE PILL
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  height: 70,
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceLowest,
+                    borderRadius: BorderRadius.circular(
+                      36,
+                    ), // Super round pill edges
+                    boxShadow: AppTheme.sunlightShadow,
                   ),
-                );
-              } else if (index == 2) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const NewEntryScreen(),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _buildNavItem(
+                        icon: Icons.home_filled,
+                        label: 'Home',
+                        index: 0,
+                        currentIndex: 0,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.calendar_today_rounded,
+                        label: 'History',
+                        index: 1,
+                        currentIndex: 0,
+                      ),
+
+                      const SizedBox(
+                        width: 56,
+                      ), // The empty gap for the hovering button
+
+                      _buildNavItem(
+                        icon: Icons.restaurant_outlined,
+                        label: 'Diet',
+                        index: 2,
+                        currentIndex: 0,
+                      ),
+                      _buildNavItem(
+                        icon: Icons.settings_outlined,
+                        label: 'Settings',
+                        index: 3,
+                        currentIndex: 0,
+                      ),
+                    ],
                   ),
-                ).then((_) => _loadDashboardData());
-              } else if (index == 3) {
-                Navigator.pushReplacement(
-                  context,
-                  PageRouteBuilder(
-                    pageBuilder: (_, __, ___) => const SettingsScreen(),
-                    transitionDuration: Duration.zero,
+                ),
+              ),
+
+              // 2. THE HOVERING ADD BUTTON
+              Positioned(
+                top:
+                    5, // Pulls the button up so it overlaps the top edge of the pill
+                child: SizedBox(
+                  height: 60,
+                  width: 60,
+                  child: FloatingActionButton(
+                    backgroundColor: AppTheme.secondary,
+                    elevation: 4,
+                    shape: const CircleBorder(),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NewEntryScreen(),
+                        ),
+                      ).then((_) => _loadDashboardData());
+                    },
+                    child: const Icon(Icons.add, size: 32, color: Colors.white),
                   ),
-                );
-              }
-            },
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.home_filled),
-                label: 'HOME',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.calendar_today_rounded),
-                label: 'HISTORY',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle_outline, size: 28),
-                label: 'ENTRY',
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.settings_outlined),
-                label: 'SETTINGS',
+                ),
               ),
             ],
           ),
@@ -388,7 +453,7 @@ class _HomeScreenState extends State<HomeScreen> {
     String dateStr = DateFormat('MMM d').format(entry.date).toUpperCase();
 
     return Container(
-      padding: const EdgeInsets.all(20), // TIGHTENED
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppTheme.surfaceLowest,
         borderRadius: BorderRadius.circular(24),
@@ -462,6 +527,69 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNavItem({
+    required IconData icon,
+    required String label,
+    required int index,
+    required int currentIndex,
+  }) {
+    bool isActive = index == currentIndex;
+
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        if (index == 1) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const HistoryScreen(),
+              transitionDuration: Duration.zero,
+            ),
+          );
+        } else if (index == 2) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const DietScreen(),
+              transitionDuration: Duration.zero,
+            ),
+          );
+        } else if (index == 3) {
+          Navigator.pushReplacement(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (_, __, ___) => const SettingsScreen(),
+              transitionDuration: Duration.zero,
+            ),
+          );
+        }
+      },
+      child: SizedBox(
+        width: 54,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: isActive ? 26 : 24,
+              color: isActive ? AppTheme.secondary : AppTheme.outline,
+            ),
+            if (isActive) ...[
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  fontSize: 9,
+                  color: AppTheme.secondary,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
