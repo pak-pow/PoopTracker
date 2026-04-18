@@ -31,7 +31,7 @@ class JournalEntry {
       type: row[1].toString(),
       discomfort: double.tryParse(row[2].toString()) ?? 1.0,
       tags: row[3].toString().isEmpty ? [] : row[3].toString().split('|'),
-      notes: row[5].toString(),
+      notes: row[4].toString(),
     );
   }
 }

@@ -23,6 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   // NEW: A map to hold the meals linked to the recent entry's date
   Map<String, String> _recentMeals = {};
+  int _recentTotalCalories = 0;
 
   @override
   void initState() {
@@ -39,26 +40,30 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadDashboardData() async {
-    final count = await CsvService().getWeeklyRhythmCount();
+    final count = await CsvService().getCurrentStreak();
     final recent = await CsvService().getMostRecentEntry();
     final prefs = await SharedPreferences.getInstance();
 
     Map<String, String> meals = {};
+    int totalCals = 0;
 
     // NEW: If we have a recent entry, fetch the diet logs for that exact date!
     if (recent != null) {
       String dateKey = DateFormat('yyyy-MM-dd').format(recent.date);
-      meals['Breakfast'] =
-          prefs.getString('meal_${dateKey}_Breakfast_desc') ?? '';
-      meals['Lunch'] = prefs.getString('meal_${dateKey}_Lunch_desc') ?? '';
-      meals['Dinner'] = prefs.getString('meal_${dateKey}_Dinner_desc') ?? '';
-      meals['Snacks'] = prefs.getString('meal_${dateKey}_Snacks_desc') ?? '';
+      for (String meal in ['Breakfast', 'Lunch', 'Dinner', 'Snacks']) {
+        meals[meal] = prefs.getString('meal_${dateKey}_${meal}_desc') ?? '';
+        String calsStr = prefs.getString('meal_${dateKey}_${meal}_cals') ?? '';
+        if (calsStr.isNotEmpty) {
+          totalCals += int.tryParse(calsStr) ?? 0;
+        }
+      }
     }
 
     setState(() {
       _streakCount = count;
       _recentEntry = recent;
       _recentMeals = meals;
+      _recentTotalCalories = totalCals;
     });
   }
 
@@ -473,15 +478,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 2,
               ),
             ),
-            Text(
-              "DIET LOG FOR THIS DAY",
-              style: TextStyle(
-                fontFamily: 'JakartaSans',
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.textVariant,
-                letterSpacing: 1.2,
-              ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  "DIET LOG FOR THIS DAY",
+                  style: TextStyle(
+                    fontFamily: 'JakartaSans',
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textVariant,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                if (_recentTotalCalories > 0)
+                  Text(
+                    "🔥 $_recentTotalCalories kcal total",
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.secondary,
+                          fontSize: 10,
+                        ),
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
             if (_recentMeals['Breakfast']!.isNotEmpty)

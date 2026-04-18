@@ -134,7 +134,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
               elevation: 0,
             ),
             onPressed: () {
-              final newTag = tagController.text.trim();
+              final newTag = tagController.text.trim().replaceAll('|', '');
               if (newTag.isNotEmpty) {
                 setState(() {
                   if (!_availableTags.contains(newTag)) {

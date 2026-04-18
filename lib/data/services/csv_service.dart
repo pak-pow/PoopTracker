@@ -59,8 +59,8 @@ class CsvService {
     return dayEntries;
   }
 
-  // Get the count of unique days with entries in the last 7 days
-  Future<int> getWeeklyRhythmCount() async {
+  // Get the current consecutive streak of daily logs
+  Future<int> getCurrentStreak() async {
     final file = await getLocalFile();
     if (!(await file.exists())) return 0;
 
@@ -69,27 +69,47 @@ class CsvService {
       fileContent,
     );
 
-    DateTime today = DateTime.now();
-    DateTime sevenDaysAgo = today.subtract(const Duration(days: 7));
     Set<String> daysWithEntries = {};
 
     for (var row in csvData) {
       if (row.isNotEmpty) {
         try {
           DateTime entryDate = DateTime.parse(row[0].toString());
-          // Check if the entry is within the last 7 days
-          if (entryDate.isAfter(sevenDaysAgo)) {
-            // Save as a string (YYYY-MM-DD) so multiple entries on the same day only count as 1
-            daysWithEntries.add(
-              "${entryDate.year}-${entryDate.month}-${entryDate.day}",
-            );
-          }
+          daysWithEntries.add(
+              "${entryDate.year}-${entryDate.month}-${entryDate.day}");
         } catch (e) {
           // Ignore any malformed rows
         }
       }
     }
-    return daysWithEntries.length;
+
+    if (daysWithEntries.isEmpty) return 0;
+
+    int streak = 0;
+    DateTime dateToCheck = DateTime.now();
+    String todayKey = "${dateToCheck.year}-${dateToCheck.month}-${dateToCheck.day}";
+    
+    // If today is NOT logged, check if yesterday is logged, if neither, streak is 0.
+    if (!daysWithEntries.contains(todayKey)) {
+      dateToCheck = dateToCheck.subtract(const Duration(days: 1));
+      String yesterdayKey = "${dateToCheck.year}-${dateToCheck.month}-${dateToCheck.day}";
+      if (!daysWithEntries.contains(yesterdayKey)) {
+         return 0; // The streak is dead
+      }
+    }
+
+    // Now start counting backward consecutively
+    while (true) {
+      String dateKey = "${dateToCheck.year}-${dateToCheck.month}-${dateToCheck.day}";
+      if (daysWithEntries.contains(dateKey)) {
+        streak++;
+        dateToCheck = dateToCheck.subtract(const Duration(days: 1));
+      } else {
+        break;
+      }
+    }
+
+    return streak;
   }
 
   Future<void> deleteEntry(JournalEntry entryToDelete) async {
@@ -101,12 +121,12 @@ class CsvService {
       fileContent,
     );
 
-    // Convert the entry we want to delete into a CSV row to compare
-    final targetRowString = entryToDelete.toCsvRow().join(',');
+    final String targetDateStr = entryToDelete.date.toIso8601String();
 
-    // Filter out the row that matches exactly
+    // Filter out the row that matches exactly by timestamp
     final List<List<dynamic>> updatedCsvData = csvData.where((row) {
-      return row.join(',') != targetRowString;
+      if (row.isEmpty) return false;
+      return row[0].toString() != targetDateStr;
     }).toList();
 
     // Save the newly updated list back to the file
