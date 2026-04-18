@@ -37,7 +37,7 @@ class HazelJournalApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Personal Journal',
+      title: 'Organic Tracker',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.organicTheme,
       home: isFirstLaunch ? const OnboardingScreen() : const HomeScreen(),
