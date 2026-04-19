@@ -335,8 +335,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildEntryCard(JournalEntry entry, {bool showDiet = false}) {
-    // Determine Emoji and Severity Pill based on the Type
-    String emoji = "🍌";
+    // Determine Severity Pill based on the Type
     String severity = "NORMAL";
     Color severityColor = AppTheme.primary;
     Color severityBg = AppTheme.primaryContainer.withOpacity(0.2);
@@ -344,9 +343,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (entry.type.contains("Type 1") ||
         entry.type.contains("Type 2") ||
         entry.type.contains("Type 3")) {
-      emoji = entry.type.contains("Type 1")
-          ? "🪨"
-          : (entry.type.contains("Type 2") ? "🥜" : "🪵");
       if (entry.discomfort > 3) {
         severity = "MILD PAIN";
         severityColor = AppTheme.secondary;
@@ -355,9 +351,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     } else if (entry.type.contains("Type 5") ||
         entry.type.contains("Type 6") ||
         entry.type.contains("Type 7")) {
-      emoji = entry.type.contains("Type 5")
-          ? "☁️"
-          : (entry.type.contains("Type 6") ? "💧" : "🌊");
       if (entry.discomfort > 3) {
         severity = "DISCOMFORT";
         severityColor = AppTheme.secondary;
@@ -403,7 +396,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   alignment: Alignment.center,
-                  child: Text(emoji, style: const TextStyle(fontSize: 24)),
+                  child: Icon(entry.iconData, size: 24, color: AppTheme.secondary),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -474,12 +467,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     Row(
                       children: [
                         if (_dayTotalCalories > 0)
-                          Text(
-                            "🔥 $_dayTotalCalories kcal total",
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: AppTheme.secondary,
-                                  fontSize: 10,
-                                ),
+                          Row(
+                            children: [
+                              const Icon(Icons.local_fire_department, size: 14, color: AppTheme.secondary),
+                              const SizedBox(width: 4),
+                              Text(
+                                "$_dayTotalCalories kcal total",
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      color: AppTheme.secondary,
+                                      fontSize: 10,
+                                    ),
+                              ),
+                            ],
                           ),
                         const SizedBox(width: 8),
                         Icon(

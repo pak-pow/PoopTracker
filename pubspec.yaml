@@ -116,3 +116,5 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/logo_capybara.png"
   min_sdk_android: 21 # Optional, but good practice
+  adaptive_icon_background: "#FAFAF3"
+  adaptive_icon_foreground: "assets/logo_capybara_foreground.png"

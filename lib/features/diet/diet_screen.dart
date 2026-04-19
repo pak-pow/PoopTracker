@@ -351,13 +351,19 @@ class _DietScreenState extends State<DietScreen> {
                           style: Theme.of(context).textTheme.labelSmall,
                         ),
                         if (_totalCalories > 0)
-                          Text(
-                            "🔥 $_totalCalories kcal total",
-                            style: Theme.of(context).textTheme.labelSmall
-                                ?.copyWith(
-                                  color: AppTheme.secondary,
-                                  fontSize: 10,
-                                ),
+                          Row(
+                            children: [
+                              const Icon(Icons.local_fire_department, size: 14, color: AppTheme.secondary),
+                              const SizedBox(width: 4),
+                              Text(
+                                "$_totalCalories kcal total",
+                                style: Theme.of(context).textTheme.labelSmall
+                                    ?.copyWith(
+                                      color: AppTheme.secondary,
+                                      fontSize: 10,
+                                    ),
+                              ),
+                            ],
                           ),
                       ],
                     ),
@@ -444,11 +450,17 @@ class _DietScreenState extends State<DietScreen> {
               ),
             ),
             if (isLogged && cals.isNotEmpty)
-              Text(
-                "🔥 $cals kcal",
-                style: Theme.of(
-                  context,
-                ).textTheme.labelSmall?.copyWith(color: AppTheme.secondary),
+              Row(
+                children: [
+                   const Icon(Icons.local_fire_department, size: 14, color: AppTheme.secondary),
+                   const SizedBox(width: 4),
+                   Text(
+                    "$cals kcal",
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: AppTheme.secondary),
+                  ),
+                ],
               ),
           ],
         ),

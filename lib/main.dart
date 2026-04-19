@@ -10,22 +10,36 @@ import 'core/theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await NotificationService().init();
-  
-  final prefs = await SharedPreferences.getInstance();
-  
-  final remindersEnabled = prefs.getBool('remindersEnabled') ?? true;
-  if (remindersEnabled) {
-    final hour = prefs.getInt('reminderHour') ?? 20;
-    final min = prefs.getInt('reminderMinute') ?? 30;
-    await NotificationService().scheduleDailyReminder(
-      TimeOfDay(hour: hour, minute: min),
-    );
-  } else {
-    await NotificationService().cancelAllNotifications();
+  try {
+    await NotificationService().init();
+  } catch (e) {
+    debugPrint('Failed to initialize NotificationService: $e');
   }
 
-  final isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+  bool isFirstLaunch = true;
+  try {
+    final prefs = await SharedPreferences.getInstance();
+
+    final remindersEnabled = prefs.getBool('remindersEnabled') ?? true;
+    if (remindersEnabled) {
+      final hour = prefs.getInt('reminderHour') ?? 20;
+      final min = prefs.getInt('reminderMinute') ?? 30;
+      try {
+        await NotificationService().scheduleDailyReminder(
+          TimeOfDay(hour: hour, minute: min),
+        );
+      } catch (e) {
+        debugPrint('Failed to schedule daily reminder: $e');
+      }
+    } else {
+      await NotificationService().cancelAllNotifications();
+    }
+
+    isFirstLaunch = prefs.getBool('isFirstLaunch') ?? true;
+  } catch (e) {
+    debugPrint('Failed to initialize SharedPreferences: $e');
+  }
+
   runApp(HazelJournalApp(isFirstLaunch: isFirstLaunch));
 }
 

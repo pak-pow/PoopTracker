@@ -18,47 +18,47 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
   bool _showAllTypes = false; // Controls the expand/collapse
 
   // The Full Official Bristol Stool Scale
-  final List<Map<String, String>> _allStoolTypes = [
+  final List<Map<String, dynamic>> _allStoolTypes = [
     {
       "title": "Type 1",
       "subtitle": "Separate hard lumps",
-      "emoji": "🪨",
+      "icon": Icons.lens,
       "internal": "Type 1: Hard Lumps",
     },
     {
       "title": "Type 2",
       "subtitle": "Sausage-shaped, lumpy",
-      "emoji": "🥜",
+      "icon": Icons.grain,
       "internal": "Type 2: Lumpy",
     },
     {
       "title": "Type 3",
       "subtitle": "Sausage with cracks",
-      "emoji": "🪵",
+      "icon": Icons.horizontal_rule,
       "internal": "Type 3: Cracked",
     },
     {
       "title": "Type 4",
       "subtitle": "Smooth, soft sausage",
-      "emoji": "🍌",
+      "icon": Icons.water_drop_outlined,
       "internal": "Type 4: Smooth",
     },
     {
       "title": "Type 5",
       "subtitle": "Soft blobs, clear edges",
-      "emoji": "☁️",
+      "icon": Icons.cloud_outlined,
       "internal": "Type 5: Soft Blobs",
     },
     {
       "title": "Type 6",
       "subtitle": "Mushy, ragged edges",
-      "emoji": "💧",
+      "icon": Icons.water_drop,
       "internal": "Type 6: Mushy",
     },
     {
       "title": "Type 7",
       "subtitle": "Liquid, no solid pieces",
-      "emoji": "🌊",
+      "icon": Icons.waves,
       "internal": "Type 7: Liquid",
     },
   ];
@@ -424,7 +424,7 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                       ],
                     ),
                     const SizedBox(height: 40),
-                
+
                     // 5. NOTES
                     Text(
                       "NOTES",
@@ -516,11 +516,11 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
 
   // --- HELPER WIDGETS ---
 
-  Widget _buildTypeCard(Map<String, String> typeData, double width) {
+  Widget _buildTypeCard(Map<String, dynamic> typeData, double width) {
     String internalValue = typeData["internal"]!;
     String uiTitle = typeData["title"]!;
     String subtitle = typeData["subtitle"]!;
-    String emoji = typeData["emoji"]!;
+    IconData iconData = typeData["icon"] as IconData;
 
     bool isSelected = _selectedType == internalValue;
 
@@ -551,7 +551,12 @@ class _NewEntryScreenState extends State<NewEntryScreen> {
                 borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
-              child: Text(emoji, style: const TextStyle(fontSize: 28)),
+              // Icon Box
+              child: Icon(
+                iconData,
+                size: 28,
+                color: isSelected ? Colors.white : AppTheme.secondary,
+              ),
             ),
             const SizedBox(height: 16),
             Text(

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class JournalEntry {
   final DateTime date;
   final String type; // "Smooth & Soft", "Hard & Dry", etc.
@@ -33,5 +35,18 @@ class JournalEntry {
       tags: row[3].toString().isEmpty ? [] : row[3].toString().split('|'),
       notes: row[4].toString(),
     );
+  }
+}
+
+extension JournalEntryIcons on JournalEntry {
+  IconData get iconData {
+    if (type.contains("Type 1")) return Icons.lens;
+    if (type.contains("Type 2")) return Icons.grain;
+    if (type.contains("Type 3")) return Icons.horizontal_rule;
+    if (type.contains("Type 4")) return Icons.water_drop_outlined;
+    if (type.contains("Type 5")) return Icons.cloud_outlined;
+    if (type.contains("Type 6")) return Icons.water_drop;
+    if (type.contains("Type 7")) return Icons.waves;
+    return Icons.circle_outlined;
   }
 }

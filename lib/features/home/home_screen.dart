@@ -115,7 +115,7 @@ class _HomeScreenState extends State<HomeScreen> {
               SafeArea(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.only(
-                    top: 60,
+                    top: 68,
                     left: 24,
                     right: 24,
                     bottom: 120,
@@ -425,7 +425,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildRecentEntryCard(JournalEntry entry) {
-    String emoji = "🍌";
     String severity = "LOGGED";
     Color severityColor = AppTheme.primary;
     Color severityBg = AppTheme.primaryContainer.withOpacity(0.2);
@@ -433,9 +432,6 @@ class _HomeScreenState extends State<HomeScreen> {
     if (entry.type.contains("Type 1") ||
         entry.type.contains("Type 2") ||
         entry.type.contains("Type 3")) {
-      emoji = entry.type.contains("Type 1")
-          ? "🪨"
-          : (entry.type.contains("Type 2") ? "🥜" : "🪵");
       if (entry.discomfort > 3) {
         severity = "MILD PAIN";
         severityColor = AppTheme.secondary;
@@ -444,9 +440,6 @@ class _HomeScreenState extends State<HomeScreen> {
     } else if (entry.type.contains("Type 5") ||
         entry.type.contains("Type 6") ||
         entry.type.contains("Type 7")) {
-      emoji = entry.type.contains("Type 5")
-          ? "☁️"
-          : (entry.type.contains("Type 6") ? "💧" : "🌊");
       if (entry.discomfort > 3) {
         severity = "DISCOMFORT";
         severityColor = AppTheme.secondary;
@@ -508,7 +501,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 alignment: Alignment.center,
-                child: Text(emoji, style: const TextStyle(fontSize: 26)),
+                child: Icon(
+                  entry.iconData,
+                  size: 26,
+                  color: AppTheme.secondary,
+                ),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -560,12 +557,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 if (_recentTotalCalories > 0)
-                  Text(
-                    "🔥 $_recentTotalCalories kcal total",
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: AppTheme.secondary,
-                      fontSize: 10,
-                    ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.local_fire_department,
+                        size: 14,
+                        color: AppTheme.secondary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        "$_recentTotalCalories kcal total",
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppTheme.secondary,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ],
                   ),
               ],
             ),

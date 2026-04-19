@@ -74,7 +74,7 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
       0,
-      'Time to check in! ✨',
+      'Time to check in!',
       'Take a moment to log your rhythm for today.',
       scheduledDate,
       platformChannelSpecifics,
@@ -107,7 +107,7 @@ class NotificationService {
 
     await flutterLocalNotificationsPlugin.show(
       99,
-      'Test Notification 🚀',
+      'Test Notification',
       'It works! Your device is successfully receiving local notifications.',
       platformChannelSpecifics,
     );
